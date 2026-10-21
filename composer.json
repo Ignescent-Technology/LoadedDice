@@ -1,0 +1,40 @@
+{
+    "name": "ignescent/loaded-dice",
+    "description": "Utilities for deterministic randomness.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ignescent\\LoadedDice\\": "src/",
+            "Ignescent\\LoadedDice\\Laravel\\": "laravel/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ignescent\\LoadedDice\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Michael Cordingley"
+        }
+    ],
+    "require-dev": {
+        "illuminate/support": "^13.26",
+        "phpunit/phpunit": "^13.3"
+    },
+    "extra": {
+        "laravel": {
+            "aliases": {
+                "LoadedDice": "Ignescent\\LoadedDice\\Laravel\\Facade"
+            },
+            "providers": [
+                "Ignescent\\LoadedDice\\Laravel\\LoadedDiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "mathieuviossat/fibonacci-heap": "^1.0",
+        "php": ">=8.3"
+    }
+}
