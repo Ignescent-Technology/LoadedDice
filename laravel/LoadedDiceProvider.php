@@ -39,8 +39,8 @@ class LoadedDiceProvider extends ServiceProvider
             ], 'loaded_dice');
         }
 
-        Collection::macro('fauxRandom', function (int|callable|null $number = null, $preserveKeys = false): Collection {
-            if (is_null($number)) return LoadedDice::randomElement($this->values());
+        Collection::macro('fauxRandom', function (int|callable|null $number = null, $preserveKeys = false): mixed {
+            if (is_null($number)) return LoadedDice::randomElement($this->values()->all());
             if (is_callable($number)) $number = $number($this);
 
             return $this->newInstance(LoadedDice::randomSubset($number, $this->all(), $preserveKeys));
