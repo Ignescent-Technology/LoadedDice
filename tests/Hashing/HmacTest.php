@@ -7,6 +7,8 @@ namespace Ignescent\LoadedDice\Tests\Hashing;
 use Ignescent\LoadedDice\Hashing\Hash;
 use Ignescent\LoadedDice\Hashing\Hmac;
 use PHPUnit\Framework\TestCase;
+use Random\Engine;
+use Random\Engine\Xoshiro256StarStar;
 
 class HmacTest extends TestCase
 {
@@ -61,5 +63,47 @@ class HmacTest extends TestCase
         $hmac = new Hmac('secret-key');
 
         $this->assertNotSame($hmac->hash('input-1'), $hmac->hash('input-2'));
+    }
+
+    public function testSeedEngineReturnsRandomEngineInstance(): void
+    {
+        $hmac = new Hmac('secret-key');
+        $engine = $hmac->seedEngine('test-seed');
+
+        $this->assertInstanceOf(Engine::class, $engine);
+        $this->assertInstanceOf(Xoshiro256StarStar::class, $engine);
+    }
+
+    public function testSeedEngineIsDeterministicWithSameKeyAndValue(): void
+    {
+        $hmac1 = new Hmac('seed-key');
+        $hmac2 = new Hmac('seed-key');
+
+        $engine1 = $hmac1->seedEngine('seed-val');
+        $engine2 = $hmac2->seedEngine('seed-val');
+
+        $this->assertSame($engine1->generate(), $engine2->generate());
+        $this->assertSame($engine1->generate(), $engine2->generate());
+    }
+
+    public function testSeedEngineProducesDifferentStreamsWithDifferentValues(): void
+    {
+        $hmac = new Hmac('seed-key');
+
+        $engine1 = $hmac->seedEngine('seed-val-1');
+        $engine2 = $hmac->seedEngine('seed-val-2');
+
+        $this->assertNotSame($engine1->generate(), $engine2->generate());
+    }
+
+    public function testSeedEngineProducesDifferentStreamsWithDifferentKeys(): void
+    {
+        $hmac1 = new Hmac('key-1');
+        $hmac2 = new Hmac('key-2');
+
+        $engine1 = $hmac1->seedEngine('same-seed');
+        $engine2 = $hmac2->seedEngine('same-seed');
+
+        $this->assertNotSame($engine1->generate(), $engine2->generate());
     }
 }

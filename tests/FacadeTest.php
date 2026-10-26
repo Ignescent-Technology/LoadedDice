@@ -4,6 +4,15 @@ declare(strict_types=1);
 
 namespace Ignescent\LoadedDice\Tests;
 
+use Ignescent\LoadedDice\Distributions\Continuous\Beta as ContinuousBeta;
+use Ignescent\LoadedDice\Distributions\Continuous\Exponential as ContinuousExponential;
+use Ignescent\LoadedDice\Distributions\Continuous\Gamma as ContinuousGamma;
+use Ignescent\LoadedDice\Distributions\Continuous\Normal as ContinuousNormal;
+use Ignescent\LoadedDice\Distributions\Continuous\Uniform as ContinuousUniform;
+use Ignescent\LoadedDice\Distributions\Discrete\Binomial as DiscreteBinomial;
+use Ignescent\LoadedDice\Distributions\Discrete\Geometric as DiscreteGeometric;
+use Ignescent\LoadedDice\Distributions\Discrete\Poisson as DiscretePoisson;
+use Ignescent\LoadedDice\Distributions\Discrete\Uniform as DiscreteUniform;
 use Ignescent\LoadedDice\Facade;
 use Ignescent\LoadedDice\Hashing\Hmac;
 use PHPUnit\Framework\TestCase;
@@ -36,6 +45,37 @@ class FacadeTest extends TestCase
         $this->assertSame($val1, $val2);
         $this->assertGreaterThanOrEqual(0.0, $val1);
         $this->assertLessThan(1.0, $val1);
+    }
+
+    public function testIntegerReturnsDeterministicIntegerInRange(): void
+    {
+        $int1 = $this->facade->integer('sample-input', 100);
+        $int2 = $this->facade->integer('sample-input', 100);
+
+        $this->assertSame($int1, $int2);
+        $this->assertGreaterThanOrEqual(0, $int1);
+        $this->assertLessThanOrEqual(100, $int1);
+
+        $defaultMax = $this->facade->integer('sample-input');
+        $this->assertGreaterThanOrEqual(0, $defaultMax);
+        $this->assertLessThanOrEqual(PHP_INT_MAX, $defaultMax);
+    }
+
+    public function testWeightedRendezvous(): void
+    {
+        $sites = [
+            'site-a' => 1.0,
+            'site-b' => 5.0,
+            'site-c' => 2.0,
+        ];
+
+        $res1 = Facade::weightedRendezvous('object-1', $sites, 2);
+        $res2 = Facade::weightedRendezvous('object-1', $sites, 2);
+
+        $this->assertSame($res1, $res2);
+        $this->assertCount(2, $res1);
+        $this->assertContains($res1[0], array_keys($sites));
+        $this->assertContains($res1[1], array_keys($sites));
     }
 
     public function testRandomElementReturnsNullForEmptyCollection(): void
@@ -125,7 +165,120 @@ class FacadeTest extends TestCase
 
         $this->assertIsBool($this->facade->boolean($str1));
         $this->assertIsFloat($this->facade->float($str1));
+        $this->assertIsInt($this->facade->integer($str1, 50));
         $this->assertNotNull($this->facade->randomElement([$str1, $str2]));
         $this->assertCount(2, $this->facade->randomSubset(2, [$str1, $str2]));
+    }
+
+    public function testBetaGeneratorReturnsBetaDistributionInstance(): void
+    {
+        $gen = $this->facade->betaGenerator('beta-seed', 2.0, 5.0);
+
+        $this->assertInstanceOf(ContinuousBeta::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->betaGenerator('beta-seed', 2.0, 5.0)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThanOrEqual(0.0, $sample1);
+        $this->assertLessThanOrEqual(1.0, $sample1);
+    }
+
+    public function testExponentialGeneratorReturnsExponentialDistributionInstance(): void
+    {
+        $gen = $this->facade->exponentialGenerator('exp-seed', 1.5);
+
+        $this->assertInstanceOf(ContinuousExponential::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->exponentialGenerator('exp-seed', 1.5)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThan(0.0, $sample1);
+    }
+
+    public function testGammaGeneratorReturnsGammaDistributionInstance(): void
+    {
+        $gen = $this->facade->gammaGenerator('gamma-seed', 2.0, 2.0);
+
+        $this->assertInstanceOf(ContinuousGamma::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->gammaGenerator('gamma-seed', 2.0, 2.0)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThan(0.0, $sample1);
+    }
+
+    public function testNormalGeneratorReturnsNormalDistributionInstance(): void
+    {
+        $gen = $this->facade->normalGenerator('normal-seed', 10.0, 2.0);
+
+        $this->assertInstanceOf(ContinuousNormal::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->normalGenerator('normal-seed', 10.0, 2.0)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertIsFloat($sample1);
+    }
+
+    public function testContinuousUniformGeneratorReturnsContinuousUniformDistributionInstance(): void
+    {
+        $gen = $this->facade->continuousUniformGenerator('cuniform-seed', 5.0, 10.0);
+
+        $this->assertInstanceOf(ContinuousUniform::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->continuousUniformGenerator('cuniform-seed', 5.0, 10.0)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThanOrEqual(5.0, $sample1);
+        $this->assertLessThanOrEqual(10.0, $sample1);
+    }
+
+    public function testBinomialGeneratorReturnsBinomialDistributionInstance(): void
+    {
+        $gen = $this->facade->binomialGenerator('binom-seed', 10, 0.5);
+
+        $this->assertInstanceOf(DiscreteBinomial::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->binomialGenerator('binom-seed', 10, 0.5)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThanOrEqual(0, $sample1);
+        $this->assertLessThanOrEqual(10, $sample1);
+    }
+
+    public function testGeometricGeneratorReturnsGeometricDistributionInstance(): void
+    {
+        $gen = $this->facade->geometricGenerator('geom-seed', 0.3);
+
+        $this->assertInstanceOf(DiscreteGeometric::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->geometricGenerator('geom-seed', 0.3)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThanOrEqual(0, $sample1);
+    }
+
+    public function testPoissonGeneratorReturnsPoissonDistributionInstance(): void
+    {
+        $gen = $this->facade->poissonGenerator('poisson-seed', 4.0);
+
+        $this->assertInstanceOf(DiscretePoisson::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->poissonGenerator('poisson-seed', 4.0)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThanOrEqual(0, $sample1);
+    }
+
+    public function testDiscreteUniformGeneratorReturnsDiscreteUniformDistributionInstance(): void
+    {
+        $gen = $this->facade->discreteUniformGenerator('duniform-seed', 1, 6);
+
+        $this->assertInstanceOf(DiscreteUniform::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->discreteUniformGenerator('duniform-seed', 1, 6)->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThanOrEqual(1, $sample1);
+        $this->assertLessThanOrEqual(6, $sample1);
     }
 }
