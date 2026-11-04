@@ -59,4 +59,41 @@ class UtilsTest extends TestCase
         // 4 hex chars = 2 bytes (max 65535)
         $this->assertSame(0x8000 / 0xffff, Utils::hashToFloat('8000'));
     }
+
+    public function testGammaFactorialValuesForIntegers(): void
+    {
+        $this->assertEqualsWithDelta(1.0, Utils::gamma(1.0), 1e-10);
+        $this->assertEqualsWithDelta(1.0, Utils::gamma(2.0), 1e-10);
+        $this->assertEqualsWithDelta(2.0, Utils::gamma(3.0), 1e-10);
+        $this->assertEqualsWithDelta(6.0, Utils::gamma(4.0), 1e-10);
+        $this->assertEqualsWithDelta(24.0, Utils::gamma(5.0), 1e-10);
+        $this->assertEqualsWithDelta(120.0, Utils::gamma(6.0), 1e-10);
+    }
+
+    public function testGammaHalfIntegerValues(): void
+    {
+        $this->assertEqualsWithDelta(sqrt(M_PI), Utils::gamma(0.5), 1e-10);
+        $this->assertEqualsWithDelta(0.5 * sqrt(M_PI), Utils::gamma(1.5), 1e-10);
+        $this->assertEqualsWithDelta(0.75 * sqrt(M_PI), Utils::gamma(2.5), 1e-10);
+        $this->assertEqualsWithDelta(1.875 * sqrt(M_PI), Utils::gamma(3.5), 1e-10);
+        $this->assertEqualsWithDelta(-2.0 * sqrt(M_PI), Utils::gamma(-0.5), 1e-10);
+    }
+
+    public function testGammaRecurrenceRelation(): void
+    {
+        $testValues = [0.7, 1.3, 2.8, 4.2, 5.5];
+
+        foreach ($testValues as $x) {
+            $expected = $x * Utils::gamma($x);
+            $actual = Utils::gamma($x + 1.0);
+            $this->assertEqualsWithDelta($expected, $actual, 1e-9);
+        }
+    }
+
+    public function testGammaNonPositiveIntegersReturnInfinity(): void
+    {
+        $this->assertTrue(is_infinite(Utils::gamma(0.0)));
+        $this->assertTrue(is_infinite(Utils::gamma(-1.0)));
+        $this->assertTrue(is_infinite(Utils::gamma(-2.0)));
+    }
 }
