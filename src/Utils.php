@@ -83,4 +83,22 @@ final class Utils
 
         return sqrt(2.0 * M_PI) * ($t ** ($z + 0.5)) * exp(-$t) * $acc;
     }
+
+    /**
+     * Computes the beta function for two given inputs.
+     *
+     * The beta function is a special function in mathematics that is closely related
+     * to the gamma function. It is defined in terms of the gamma function using the formula:
+     * B(a, b) = Γ(a) * Γ(b) / Γ(a + b).
+     *
+     * @param float $a The first input value for which the beta function is calculated.
+     *                 Must be a positive number.
+     * @param float $b The second input value for which the beta function is calculated.
+     *                 Must be a positive number.
+     * @return float The computed value of the beta function for the given inputs.
+     */
+    public static function beta(float $a, float $b): float
+    {
+        return self::gamma($a) * self::gamma($b) / self::gamma($a + $b);
+    }
 }

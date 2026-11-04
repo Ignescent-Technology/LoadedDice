@@ -96,4 +96,55 @@ class UtilsTest extends TestCase
         $this->assertTrue(is_infinite(Utils::gamma(-1.0)));
         $this->assertTrue(is_infinite(Utils::gamma(-2.0)));
     }
+
+    public function testBetaKnownValues(): void
+    {
+        $this->assertEqualsWithDelta(1.0, Utils::beta(1.0, 1.0), 1e-10);
+        $this->assertEqualsWithDelta(0.5, Utils::beta(1.0, 2.0), 1e-10);
+        $this->assertEqualsWithDelta(1.0 / 6.0, Utils::beta(2.0, 2.0), 1e-10);
+        $this->assertEqualsWithDelta(1.0 / 60.0, Utils::beta(3.0, 4.0), 1e-10);
+        $this->assertEqualsWithDelta(0.2, Utils::beta(1.0, 5.0), 1e-10);
+    }
+
+    public function testBetaSymmetry(): void
+    {
+        $pairs = [
+            [1.0, 2.0],
+            [2.5, 4.1],
+            [0.5, 1.5],
+            [3.2, 0.8],
+            [5.0, 2.0],
+        ];
+
+        foreach ($pairs as [$a, $b]) {
+            $this->assertEqualsWithDelta(Utils::beta($a, $b), Utils::beta($b, $a), 1e-10);
+        }
+    }
+
+    public function testBetaHalfIntegerValues(): void
+    {
+        $this->assertEqualsWithDelta(M_PI, Utils::beta(0.5, 0.5), 1e-10);
+        $this->assertEqualsWithDelta(2.0, Utils::beta(0.5, 1.0), 1e-10);
+    }
+
+    public function testBetaRecurrenceRelation(): void
+    {
+        $testPairs = [
+            [1.2, 2.3],
+            [0.7, 3.5],
+            [2.8, 1.9],
+            [4.1, 5.2],
+        ];
+
+        foreach ($testPairs as [$a, $b]) {
+            $base = Utils::beta($a, $b);
+            $expectedA = $base * ($a / ($a + $b));
+            $actualA = Utils::beta($a + 1.0, $b);
+            $this->assertEqualsWithDelta($expectedA, $actualA, 1e-9);
+
+            $expectedB = $base * ($b / ($a + $b));
+            $actualB = Utils::beta($a, $b + 1.0);
+            $this->assertEqualsWithDelta($expectedB, $actualB, 1e-9);
+        }
+    }
 }
