@@ -147,4 +147,41 @@ class UtilsTest extends TestCase
             $this->assertEqualsWithDelta($expectedB, $actualB, 1e-9);
         }
     }
+
+    public function testErfZeroReturnsZero(): void
+    {
+        $this->assertSame(0.0, Utils::erf(0.0));
+    }
+
+    public function testErfKnownValues(): void
+    {
+        // Reference values of erf(x)
+        $knownValues = [
+            [0.1, 0.1124629160],
+            [0.5, 0.5204998778],
+            [1.0, 0.8427007929],
+            [1.5, 0.9661051465],
+            [2.0, 0.9953222650],
+            [3.0, 0.9999779095],
+        ];
+
+        foreach ($knownValues as [$x, $expected]) {
+            $this->assertEqualsWithDelta($expected, Utils::erf($x), 1.5e-7);
+        }
+    }
+
+    public function testErfSymmetry(): void
+    {
+        $testValues = [0.1, 0.5, 0.8, 1.2, 2.0, 3.5];
+
+        foreach ($testValues as $x) {
+            $this->assertEqualsWithDelta(-Utils::erf($x), Utils::erf(-$x), 1e-15);
+        }
+    }
+
+    public function testErfAsymptoticLimits(): void
+    {
+        $this->assertEqualsWithDelta(1.0, Utils::erf(10.0), 1e-7);
+        $this->assertEqualsWithDelta(-1.0, Utils::erf(-10.0), 1e-7);
+    }
 }

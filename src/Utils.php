@@ -31,6 +31,47 @@ final class Utils
         return $value / $maxValue;
     }
 
+    private const float HASTINGS_P = 0.3275911;
+
+    private const array HASTINGS_COEFFICIENTS = [
+        0.254829592,
+        -0.284496736,
+        1.421413741,
+        -1.453152027,
+        1.061405429,
+    ];
+
+    /**
+     * Computes the error function erf(x) using the Hastings approximation.
+     *
+     * @param float $x
+     * @return float
+     */
+    public static function erf(float $x): float
+    {
+        if ($x === 0.0) {
+            return 0.0;
+        }
+
+        $sign = $x < 0.0 ? -1.0 : 1.0;
+        $x = abs($x);
+
+        $t = 1.0 / (1.0 + self::HASTINGS_P * $x);
+
+        $poly = (
+            (
+                (
+                    (
+                        self::HASTINGS_COEFFICIENTS[4]
+                        * $t + self::HASTINGS_COEFFICIENTS[3]
+                    )
+                    * $t + self::HASTINGS_COEFFICIENTS[2]
+                ) * $t + self::HASTINGS_COEFFICIENTS[1]
+            ) * $t + self::HASTINGS_COEFFICIENTS[0]) * $t;
+
+        return $sign * (1.0 - $poly * exp(-$x * $x));
+    }
+
     private const float LANCZOS_G = 607.0 / 128.0;
 
     private const array LANCZOS_COEFFICIENTS = [
