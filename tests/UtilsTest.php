@@ -184,4 +184,240 @@ class UtilsTest extends TestCase
         $this->assertEqualsWithDelta(1.0, Utils::erf(10.0), 1e-7);
         $this->assertEqualsWithDelta(-1.0, Utils::erf(-10.0), 1e-7);
     }
+
+    public function testIncompleteLowerGammaZeroReturnsZero(): void
+    {
+        $this->assertSame(0.0, Utils::incompleteLowerGamma(1.0, 0.0));
+        $this->assertSame(0.0, Utils::incompleteLowerGamma(2.5, 0.0));
+    }
+
+    public function testIncompleteLowerGammaInvalidInputsReturnNan(): void
+    {
+        $this->assertTrue(is_nan(Utils::incompleteLowerGamma(0.0, 1.0)));
+        $this->assertTrue(is_nan(Utils::incompleteLowerGamma(-1.0, 1.0)));
+        $this->assertTrue(is_nan(Utils::incompleteLowerGamma(1.0, -0.5)));
+    }
+
+    public function testIncompleteLowerGammaIntegerValues(): void
+    {
+        // For s = 1: gamma(1, x) = 1 - exp(-x)
+        $this->assertEqualsWithDelta(1.0 - exp(-1.0), Utils::incompleteLowerGamma(1.0, 1.0), 1e-12);
+        $this->assertEqualsWithDelta(1.0 - exp(-2.5), Utils::incompleteLowerGamma(1.0, 2.5), 1e-12);
+        $this->assertEqualsWithDelta(1.0 - exp(-5.0), Utils::incompleteLowerGamma(1.0, 5.0), 1e-12);
+
+        // For s = 2: gamma(2, x) = 1 - exp(-x) * (1 + x)
+        $this->assertEqualsWithDelta(1.0 - exp(-1.0) * (1.0 + 1.0), Utils::incompleteLowerGamma(2.0, 1.0), 1e-12);
+        $this->assertEqualsWithDelta(1.0 - exp(-3.0) * (1.0 + 3.0), Utils::incompleteLowerGamma(2.0, 3.0), 1e-12);
+
+        // For s = 3: gamma(3, x) = 2 * (1 - exp(-x) * (1 + x + x^2 / 2))
+        $expectedS3X2 = 2.0 * (1.0 - exp(-2.0) * (1.0 + 2.0 + (2.0 ** 2) / 2.0));
+        $this->assertEqualsWithDelta($expectedS3X2, Utils::incompleteLowerGamma(3.0, 2.0), 1e-12);
+    }
+
+    public function testIncompleteLowerGammaHalfIntegerValues(): void
+    {
+        // For s = 0.5: gamma(0.5, x) = sqrt(pi) * erf(sqrt(x))
+        // Known high-precision reference values
+        $this->assertEqualsWithDelta(1.493648265624854, Utils::incompleteLowerGamma(0.5, 1.0), 1e-12);
+        $this->assertEqualsWithDelta(1.764162781524843, Utils::incompleteLowerGamma(0.5, 4.0), 1e-12);
+
+        // Verification against Utils::erf within Hastings approximation bounds
+        $this->assertEqualsWithDelta(sqrt(M_PI) * Utils::erf(1.0), Utils::incompleteLowerGamma(0.5, 1.0), 5e-7);
+        $this->assertEqualsWithDelta(sqrt(M_PI) * Utils::erf(2.0), Utils::incompleteLowerGamma(0.5, 4.0), 5e-7);
+    }
+
+    public function testIncompleteLowerGammaRecurrenceRelation(): void
+    {
+        $testCases = [
+            [0.5, 0.3],
+            [1.5, 2.5],
+            [2.3, 1.8],
+            [3.5, 5.0],
+            [4.0, 2.0],
+            [5.0, 7.5],
+        ];
+
+        foreach ($testCases as [$s, $x]) {
+            $valS = Utils::incompleteLowerGamma($s, $x);
+            $valSPlus1 = Utils::incompleteLowerGamma($s + 1.0, $x);
+
+            $expectedRhs = ($x ** $s) * exp(-$x);
+            $actualLhs = $s * $valS - $valSPlus1;
+
+            $this->assertEqualsWithDelta($expectedRhs, $actualLhs, 1e-9);
+        }
+    }
+
+    public function testIncompleteLowerGammaAsymptoticLimit(): void
+    {
+        $this->assertEqualsWithDelta(Utils::gamma(1.0), Utils::incompleteLowerGamma(1.0, 50.0), 1e-12);
+        $this->assertEqualsWithDelta(Utils::gamma(2.5), Utils::incompleteLowerGamma(2.5, 60.0), 1e-12);
+        $this->assertEqualsWithDelta(Utils::gamma(4.0), Utils::incompleteLowerGamma(4.0, 70.0), 1e-12);
+    }
+
+    public function testIncompleteUpperGammaZeroReturnsFullGamma(): void
+    {
+        $this->assertEqualsWithDelta(Utils::gamma(1.0), Utils::incompleteUpperGamma(1.0, 0.0), 1e-12);
+        $this->assertEqualsWithDelta(Utils::gamma(2.5), Utils::incompleteUpperGamma(2.5, 0.0), 1e-12);
+        $this->assertEqualsWithDelta(Utils::gamma(4.0), Utils::incompleteUpperGamma(4.0, 0.0), 1e-12);
+    }
+
+    public function testIncompleteUpperGammaInvalidInputsReturnNan(): void
+    {
+        $this->assertTrue(is_nan(Utils::incompleteUpperGamma(0.0, 1.0)));
+        $this->assertTrue(is_nan(Utils::incompleteUpperGamma(-1.0, 1.0)));
+        $this->assertTrue(is_nan(Utils::incompleteUpperGamma(1.0, -0.5)));
+    }
+
+    public function testIncompleteUpperGammaIntegerValues(): void
+    {
+        // For s = 1: Gamma(1, x) = exp(-x)
+        $this->assertEqualsWithDelta(exp(-1.0), Utils::incompleteUpperGamma(1.0, 1.0), 1e-12);
+        $this->assertEqualsWithDelta(exp(-2.5), Utils::incompleteUpperGamma(1.0, 2.5), 1e-12);
+        $this->assertEqualsWithDelta(exp(-5.0), Utils::incompleteUpperGamma(1.0, 5.0), 1e-12);
+
+        // For s = 2: Gamma(2, x) = exp(-x) * (1 + x)
+        $this->assertEqualsWithDelta(exp(-1.0) * (1.0 + 1.0), Utils::incompleteUpperGamma(2.0, 1.0), 1e-12);
+        $this->assertEqualsWithDelta(exp(-3.0) * (1.0 + 3.0), Utils::incompleteUpperGamma(2.0, 3.0), 1e-12);
+
+        // For s = 3: Gamma(3, x) = exp(-x) * (2 + 2x + x^2)
+        $expectedS3X2 = exp(-2.0) * (2.0 + 2.0 * 2.0 + (2.0 ** 2));
+        $this->assertEqualsWithDelta($expectedS3X2, Utils::incompleteUpperGamma(3.0, 2.0), 1e-12);
+    }
+
+    public function testIncompleteUpperGammaHalfIntegerValues(): void
+    {
+        // For s = 0.5: Gamma(0.5, x) = sqrt(pi) * erfc(sqrt(x))
+        $expectedX1 = sqrt(M_PI) - 1.493648265624854;
+        $expectedX4 = sqrt(M_PI) - 1.764162781524843;
+
+        $this->assertEqualsWithDelta($expectedX1, Utils::incompleteUpperGamma(0.5, 1.0), 1e-12);
+        $this->assertEqualsWithDelta($expectedX4, Utils::incompleteUpperGamma(0.5, 4.0), 1e-12);
+    }
+
+    public function testIncompleteUpperGammaSumRelation(): void
+    {
+        $testCases = [
+            [0.5, 0.3],
+            [0.5, 1.0],
+            [0.5, 4.0],
+            [1.0, 1.0],
+            [1.5, 2.5],
+            [2.3, 1.8],
+            [4.0, 5.0],
+            [3.5, 10.0],
+            [5.0, 2.0],
+            [10.0, 15.0],
+        ];
+
+        foreach ($testCases as [$s, $x]) {
+            $lower = Utils::incompleteLowerGamma($s, $x);
+            $upper = Utils::incompleteUpperGamma($s, $x);
+            $total = Utils::gamma($s);
+
+            $this->assertEqualsWithDelta($total, $lower + $upper, 1e-9);
+        }
+    }
+
+    public function testIncompleteUpperGammaRecurrenceRelation(): void
+    {
+        $testCases = [
+            [0.5, 0.3],
+            [1.5, 2.5],
+            [2.3, 1.8],
+            [4.0, 5.0],
+            [3.5, 10.0],
+            [5.0, 2.0],
+            [0.1, 0.05],
+            [10.0, 15.0],
+        ];
+
+        foreach ($testCases as [$s, $x]) {
+            $valS = Utils::incompleteUpperGamma($s, $x);
+            $valSPlus1 = Utils::incompleteUpperGamma($s + 1.0, $x);
+
+            $expectedSPlus1 = $s * $valS + ($x ** $s) * exp(-$x);
+
+            $this->assertEqualsWithDelta($expectedSPlus1, $valSPlus1, 1e-9);
+        }
+    }
+
+    public function testIncompleteUpperGammaAsymptoticLimit(): void
+    {
+        $this->assertEqualsWithDelta(0.0, Utils::incompleteUpperGamma(1.0, 50.0), 1e-12);
+        $this->assertEqualsWithDelta(0.0, Utils::incompleteUpperGamma(2.5, 60.0), 1e-12);
+        $this->assertEqualsWithDelta(0.0, Utils::incompleteUpperGamma(4.0, 70.0), 1e-12);
+    }
+
+    public function testRegularizedGammaZeroReturnsZero(): void
+    {
+        $this->assertSame(0.0, Utils::regularizedGamma(1.0, 0.0));
+        $this->assertSame(0.0, Utils::regularizedGamma(2.5, 0.0));
+        $this->assertSame(0.0, Utils::regularizedGamma(5.0, 0.0));
+    }
+
+    public function testRegularizedGammaInvalidInputsReturnNan(): void
+    {
+        $this->assertTrue(is_nan(Utils::regularizedGamma(0.0, 1.0)));
+        $this->assertTrue(is_nan(Utils::regularizedGamma(-1.0, 1.0)));
+        $this->assertTrue(is_nan(Utils::regularizedGamma(1.0, -0.5)));
+    }
+
+    public function testRegularizedGammaIntegerValues(): void
+    {
+        // For s = 1: P(1, x) = 1 - exp(-x)
+        $this->assertEqualsWithDelta(1.0 - exp(-1.0), Utils::regularizedGamma(1.0, 1.0), 1e-12);
+        $this->assertEqualsWithDelta(1.0 - exp(-2.5), Utils::regularizedGamma(1.0, 2.5), 1e-12);
+        $this->assertEqualsWithDelta(1.0 - exp(-5.0), Utils::regularizedGamma(1.0, 5.0), 1e-12);
+
+        // For s = 2: P(2, x) = 1 - exp(-x) * (1 + x)
+        $this->assertEqualsWithDelta(1.0 - exp(-1.0) * (1.0 + 1.0), Utils::regularizedGamma(2.0, 1.0), 1e-12);
+        $this->assertEqualsWithDelta(1.0 - exp(-3.0) * (1.0 + 3.0), Utils::regularizedGamma(2.0, 3.0), 1e-12);
+
+        // For s = 3: P(3, x) = 1 - exp(-x) * (1 + x + x^2 / 2)
+        $expectedS3X2 = 1.0 - exp(-2.0) * (1.0 + 2.0 + (2.0 ** 2) / 2.0);
+        $this->assertEqualsWithDelta($expectedS3X2, Utils::regularizedGamma(3.0, 2.0), 1e-12);
+    }
+
+    public function testRegularizedGammaHalfIntegerValues(): void
+    {
+        // For s = 0.5: P(0.5, x) = erf(sqrt(x))
+        $this->assertEqualsWithDelta(Utils::erf(1.0), Utils::regularizedGamma(0.5, 1.0), 5e-7);
+        $this->assertEqualsWithDelta(Utils::erf(2.0), Utils::regularizedGamma(0.5, 4.0), 5e-7);
+    }
+
+    public function testRegularizedGammaConsistency(): void
+    {
+        $testCases = [
+            [0.5, 0.3],
+            [0.5, 1.0],
+            [0.5, 4.0],
+            [1.0, 1.0],
+            [1.5, 2.5],
+            [2.3, 1.8],
+            [4.0, 5.0],
+            [3.5, 10.0],
+            [5.0, 2.0],
+            [10.0, 15.0],
+        ];
+
+        foreach ($testCases as [$s, $x]) {
+            $reg = Utils::regularizedGamma($s, $x);
+            $lower = Utils::incompleteLowerGamma($s, $x);
+            $upper = Utils::incompleteUpperGamma($s, $x);
+            $gamma = Utils::gamma($s);
+
+            $this->assertEqualsWithDelta($lower / $gamma, $reg, 1e-12);
+            $this->assertEqualsWithDelta(1.0, $reg + ($upper / $gamma), 1e-12);
+            $this->assertGreaterThanOrEqual(0.0, $reg);
+            $this->assertLessThanOrEqual(1.0, $reg);
+        }
+    }
+
+    public function testRegularizedGammaAsymptoticLimits(): void
+    {
+        $this->assertEqualsWithDelta(1.0, Utils::regularizedGamma(1.0, 50.0), 1e-12);
+        $this->assertEqualsWithDelta(1.0, Utils::regularizedGamma(2.5, 60.0), 1e-12);
+        $this->assertEqualsWithDelta(1.0, Utils::regularizedGamma(4.0, 70.0), 1e-12);
+    }
 }

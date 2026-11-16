@@ -126,6 +126,127 @@ final class Utils
     }
 
     /**
+     * Computes the lower incomplete gamma function \gamma(s, x) = \int_0^x t^{s-1} e^{-t} dt.
+     *
+     * @param float $s The shape parameter (must be > 0).
+     * @param float $x The upper limit of integration (must be >= 0).
+     * @return float The computed value of the lower incomplete gamma function.
+     */
+    public static function incompleteLowerGamma(float $s, float $x): float
+    {
+        if ($s <= 0.0 || $x < 0.0) {
+            return NAN;
+        }
+
+        if ($x === 0.0) {
+            return 0.0;
+        }
+
+        if ($x < $s + 1.0) {
+            return self::incompleteGammaSeries($s, $x);
+        }
+
+        return max(0.0, self::gamma($s) - self::incompleteGammaContinuedFraction($s, $x));
+    }
+
+    /**
+     * Computes the upper incomplete gamma function \Gamma(s, x) = \int_x^\infty t^{s-1} e^{-t} dt.
+     *
+     * @param float $s The shape parameter (must be > 0).
+     * @param float $x The lower limit of integration (must be >= 0).
+     * @return float The computed value of the upper incomplete gamma function.
+     */
+    public static function incompleteUpperGamma(float $s, float $x): float
+    {
+        if ($s <= 0.0 || $x < 0.0) {
+            return NAN;
+        }
+
+        if ($x === 0.0) {
+            return self::gamma($s);
+        }
+
+        if ($x < $s + 1.0) {
+            return max(0.0, self::gamma($s) - self::incompleteGammaSeries($s, $x));
+        }
+
+        return self::incompleteGammaContinuedFraction($s, $x);
+    }
+
+    private static function incompleteGammaSeries(float $s, float $x): float
+    {
+        $sum = 1.0 / $s;
+        $term = $sum;
+        for ($k = 1; $k <= 200; $k++) {
+            $term *= $x / ($s + $k);
+            $sum += $term;
+            if (abs($term) < abs($sum) * 1e-15) {
+                break;
+            }
+        }
+
+        return exp($s * log($x) - $x) * $sum;
+    }
+
+    private static function incompleteGammaContinuedFraction(float $s, float $x): float
+    {
+        $b = $x + 1.0 - $s;
+        $c = 1.0 / 1e-30;
+        $d = 1.0 / $b;
+        $h = $d;
+
+        for ($i = 1; $i <= 200; $i++) {
+            $an = -$i * ($i - $s);
+            $b += 2.0;
+            $d = $an * $d + $b;
+            if (abs($d) < 1e-30) {
+                $d = 1e-30;
+            }
+            $c = $b + $an / $c;
+            if (abs($c) < 1e-30) {
+                $c = 1e-30;
+            }
+            $d = 1.0 / $d;
+            $del = $d * $c;
+            $h *= $del;
+            if (abs($del - 1.0) < 1e-15) {
+                break;
+            }
+        }
+
+        return exp($s * log($x) - $x) * $h;
+    }
+
+    /**
+     * Computes the regularized lower incomplete gamma function P(s, x) = \gamma(s, x) / \Gamma(s).
+     *
+     * @param float $s The shape parameter (must be > 0).
+     * @param float $x The upper limit of integration (must be >= 0).
+     * @return float The computed regularized gamma value in the range [0, 1].
+     */
+    public static function regularizedGamma(float $s, float $x): float
+    {
+        if ($s <= 0.0 || $x < 0.0) {
+            return NAN;
+        }
+
+        if ($x === 0.0) {
+            return 0.0;
+        }
+
+        $gammaS = self::gamma($s);
+        if ($gammaS == 0.0 || is_nan($gammaS) || is_infinite($gammaS)) {
+            return NAN;
+        }
+
+        if ($x < $s + 1.0) {
+            return min(1.0, max(0.0, self::incompleteGammaSeries($s, $x) / $gammaS));
+        }
+
+        return min(1.0, max(0.0, 1.0 - (self::incompleteGammaContinuedFraction($s, $x) / $gammaS)));
+    }
+
+    /**
      * Computes the beta function for two given inputs.
      *
      * The beta function is a special function in mathematics that is closely related
