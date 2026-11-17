@@ -28,4 +28,19 @@ final class Bandit
     {
         $this->experimentalData->update($arm, $reward);
     }
+
+    public static function bestArm(array $scoresByArm): string
+    {
+        $bestArm = null;
+
+        foreach ($scoresByArm as $arm => $score) {
+            if ($bestArm === null || $score > $scoresByArm[$bestArm]) {
+                $bestArm = $arm;
+            }
+        }
+
+        assert($bestArm !== null);
+
+        return $bestArm;
+    }
 }

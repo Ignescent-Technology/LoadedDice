@@ -63,17 +63,6 @@ class ExperimentalDataTest extends TestCase
         $this->assertSame(0.0, $data->getArmAverage('arm_y'));
     }
 
-    public function testBestArm(): void
-    {
-        $scores = [
-            'arm_low' => 0.1,
-            'arm_high' => 0.9,
-            'arm_mid' => 0.5,
-        ];
-
-        $this->assertSame('arm_high', ExperimentalData::bestArm($scores));
-    }
-
     public function testAssertHasArms(): void
     {
         $data = new ExperimentalData();

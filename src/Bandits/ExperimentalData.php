@@ -4,23 +4,17 @@ namespace Ignescent\LoadedDice\Bandits;
 
 final class ExperimentalData
 {
-    private array $arms = [];
+    private array $arms;
 
-    private int $totalPullCount = 0;
+    private int $totalPullCount;
 
-    public static function bestArm(array $scoresByArm): string
+    /**
+     * @param array<string, array<float>> $rewardsByArm
+     */
+    public function __construct(array $rewardsByArm = [])
     {
-        $bestArm = null;
-
-        foreach ($scoresByArm as $arm => $score) {
-            if ($bestArm === null || $score > $scoresByArm[$bestArm]) {
-                $bestArm = $arm;
-            }
-        }
-
-        assert($bestArm !== null);
-
-        return $bestArm;
+        $this->arms = $rewardsByArm;
+        $this->totalPullCount = array_sum(array_map(fn ($rewards) => count($rewards), $rewardsByArm));
     }
 
     public function initializeArms(array $arms): void
