@@ -73,4 +73,99 @@ class PoissonTest extends TestCase
         $this->assertIsInt($value);
         $this->assertGreaterThan(0, $value);
     }
+
+    public function testPmfKnownValues(): void
+    {
+        // Poisson(lambda = 2.0)
+        // PMF(0) = e^-2
+        // PMF(1) = 2 * e^-2
+        // PMF(2) = 2 * e^-2
+        // PMF(3) = (4/3) * e^-2
+        $poisson = new Poisson(new Randomizer(), 2.0);
+
+        $this->assertEqualsWithDelta(exp(-2.0), $poisson->pmf(0), 1e-12);
+        $this->assertEqualsWithDelta(2.0 * exp(-2.0), $poisson->pmf(1), 1e-12);
+        $this->assertEqualsWithDelta(2.0 * exp(-2.0), $poisson->pmf(2), 1e-12);
+        $this->assertEqualsWithDelta((4.0 / 3.0) * exp(-2.0), $poisson->pmf(3), 1e-12);
+
+        // Sum of PMF over 0..25 sums to 1.0
+        $sum = 0.0;
+        for ($k = 0; $k <= 25; $k++) {
+            $sum += $poisson->pmf($k);
+        }
+        $this->assertEqualsWithDelta(1.0, $sum, 1e-12);
+    }
+
+    public function testPmfBoundaryAndEdgeCases(): void
+    {
+        $poisson = new Poisson(new Randomizer(), 3.0);
+
+        $this->assertSame(0.0, $poisson->pmf(-1));
+        $this->assertSame(0.0, $poisson->pmf(-10));
+
+        // lambda <= 0.0 edge case
+        $zeroLambda = new Poisson(new Randomizer(), 0.0);
+        $this->assertSame(1.0, $zeroLambda->pmf(0));
+        $this->assertSame(0.0, $zeroLambda->pmf(1));
+    }
+
+    public function testPmfNumericalStabilityWithLargeParameters(): void
+    {
+        $poisson = new Poisson(new Randomizer(), 100.0);
+
+        // Peak / mode around lambda = 100
+        $peakPmf = $poisson->pmf(100);
+        $this->assertIsFloat($peakPmf);
+        $this->assertGreaterThan(0.03, $peakPmf);
+        $this->assertLessThan(0.05, $peakPmf);
+
+        // Tail underflows safely
+        $tailPmf = $poisson->pmf(500);
+        $this->assertIsFloat($tailPmf);
+        $this->assertLessThan(1e-100, $tailPmf);
+        $this->assertGreaterThanOrEqual(0.0, $tailPmf);
+    }
+
+    public function testCdfKnownValues(): void
+    {
+        // Poisson(lambda = 2.0)
+        // CDF(0) = e^-2
+        // CDF(1) = 3 * e^-2
+        // CDF(2) = 5 * e^-2
+        // CDF(3) = (19/3) * e^-2
+        $poisson = new Poisson(new Randomizer(), 2.0);
+
+        $this->assertEqualsWithDelta(exp(-2.0), $poisson->cdf(0), 1e-12);
+        $this->assertEqualsWithDelta(3.0 * exp(-2.0), $poisson->cdf(1), 1e-12);
+        $this->assertEqualsWithDelta(5.0 * exp(-2.0), $poisson->cdf(2), 1e-12);
+        $this->assertEqualsWithDelta((19.0 / 3.0) * exp(-2.0), $poisson->cdf(3), 1e-12);
+    }
+
+    public function testCdfBoundaryAndEdgeCases(): void
+    {
+        $poisson = new Poisson(new Randomizer(), 2.5);
+
+        $this->assertSame(0.0, $poisson->cdf(-1));
+        $this->assertSame(0.0, $poisson->cdf(-10));
+
+        // lambda <= 0.0 edge case
+        $zeroLambda = new Poisson(new Randomizer(), 0.0);
+        $this->assertSame(0.0, $zeroLambda->cdf(-1));
+        $this->assertSame(1.0, $zeroLambda->cdf(0));
+        $this->assertSame(1.0, $zeroLambda->cdf(5));
+
+        // Asymptotic upper limit
+        $this->assertEqualsWithDelta(1.0, $poisson->cdf(30), 1e-12);
+    }
+
+    public function testCdfMatchesCumulativePmfSum(): void
+    {
+        $poisson = new Poisson(new Randomizer(), 3.5);
+
+        $cumulativePmf = 0.0;
+        for ($k = 0; $k <= 20; $k++) {
+            $cumulativePmf += $poisson->pmf($k);
+            $this->assertEqualsWithDelta($cumulativePmf, $poisson->cdf($k), 1e-12);
+        }
+    }
 }

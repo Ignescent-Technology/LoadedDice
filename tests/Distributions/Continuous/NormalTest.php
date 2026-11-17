@@ -75,4 +75,72 @@ class NormalTest extends TestCase
         $this->assertEqualsWithDelta($targetMean, $mean, 0.1);
         $this->assertEqualsWithDelta($targetStdDev ** 2, $variance, 0.2);
     }
+
+    public function testCdfKnownValues(): void
+    {
+        $normal = new Normal(new Randomizer(), 0.0, 1.0);
+
+        $this->assertEqualsWithDelta(0.5, $normal->cdf(0.0), 1e-7);
+        $this->assertEqualsWithDelta(0.8413447, $normal->cdf(1.0), 1e-6);
+        $this->assertEqualsWithDelta(0.1586553, $normal->cdf(-1.0), 1e-6);
+        $this->assertEqualsWithDelta(0.9772499, $normal->cdf(2.0), 1e-6);
+        $this->assertEqualsWithDelta(0.0227501, $normal->cdf(-2.0), 1e-6);
+
+        // Non-standard normal distribution
+        $nonStandard = new Normal(new Randomizer(), 10.0, 2.5);
+        $this->assertEqualsWithDelta(0.5, $nonStandard->cdf(10.0), 1e-7);
+        $this->assertEqualsWithDelta(0.8413447, $nonStandard->cdf(12.5), 1e-6);
+        $this->assertEqualsWithDelta(0.1586553, $nonStandard->cdf(7.5), 1e-6);
+    }
+
+    public function testCdfSymmetry(): void
+    {
+        $mean = 5.0;
+        $stdDev = 1.8;
+        $normal = new Normal(new Randomizer(), $mean, $stdDev);
+
+        $offsets = [0.2, 0.5, 1.0, 1.8, 3.6];
+        foreach ($offsets as $offset) {
+            $cdfAbove = $normal->cdf($mean + $offset);
+            $cdfBelow = $normal->cdf($mean - $offset);
+            $this->assertEqualsWithDelta(1.0, $cdfAbove + $cdfBelow, 1e-7);
+        }
+    }
+
+    public function testPdfKnownValues(): void
+    {
+        $stdNormal = new Normal(new Randomizer(), 0.0, 1.0);
+
+        $invSqrt2Pi = 1.0 / sqrt(2 * M_PI);
+        $this->assertEqualsWithDelta($invSqrt2Pi, $stdNormal->pdf(0.0), 1e-10);
+        $this->assertEqualsWithDelta($invSqrt2Pi * exp(-0.5), $stdNormal->pdf(1.0), 1e-10);
+        $this->assertEqualsWithDelta($invSqrt2Pi * exp(-0.5), $stdNormal->pdf(-1.0), 1e-10);
+        $this->assertEqualsWithDelta($invSqrt2Pi * exp(-2.0), $stdNormal->pdf(2.0), 1e-10);
+        $this->assertEqualsWithDelta($invSqrt2Pi * exp(-2.0), $stdNormal->pdf(-2.0), 1e-10);
+
+        // Non-standard normal
+        $mean = 4.0;
+        $stdDev = 2.0;
+        $normal = new Normal(new Randomizer(), $mean, $stdDev);
+        $expectedPeak = 1.0 / ($stdDev * sqrt(2 * M_PI));
+        $this->assertEqualsWithDelta($expectedPeak, $normal->pdf(4.0), 1e-10);
+        $this->assertEqualsWithDelta($expectedPeak * exp(-0.5), $normal->pdf(6.0), 1e-10);
+        $this->assertEqualsWithDelta($expectedPeak * exp(-0.5), $normal->pdf(2.0), 1e-10);
+    }
+
+    public function testPdfSymmetry(): void
+    {
+        $mean = 7.0;
+        $stdDev = 3.0;
+        $normal = new Normal(new Randomizer(), $mean, $stdDev);
+
+        $offsets = [0.1, 0.5, 1.5, 3.0, 6.0];
+        foreach ($offsets as $offset) {
+            $this->assertEqualsWithDelta(
+                $normal->pdf($mean + $offset),
+                $normal->pdf($mean - $offset),
+                1e-10
+            );
+        }
+    }
 }

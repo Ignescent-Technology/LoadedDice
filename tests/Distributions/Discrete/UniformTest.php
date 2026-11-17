@@ -74,4 +74,71 @@ class UniformTest extends TestCase
         $expectedMean = (1 + 6) / 2.0; // 3.5
         $this->assertEqualsWithDelta($expectedMean, $mean, 0.1);
     }
+
+    public function testPmfKnownValues(): void
+    {
+        // Standard six-sided die Uniform(1, 6): PMF = 1/6 for all k in 1..6
+        $uniform = new Uniform(new Randomizer(), 1, 6);
+
+        for ($k = 1; $k <= 6; $k++) {
+            $this->assertEqualsWithDelta(1.0 / 6.0, $uniform->pmf($k), 1e-12);
+        }
+
+        // Single outcome Uniform(5, 5)
+        $singlePoint = new Uniform(new Randomizer(), 5, 5);
+        $this->assertSame(1.0, $singlePoint->pmf(5));
+
+        // Range with negative values Uniform(-2, 2) has 5 outcomes
+        $symmetric = new Uniform(new Randomizer(), -2, 2);
+        for ($k = -2; $k <= 2; $k++) {
+            $this->assertEqualsWithDelta(0.2, $symmetric->pmf($k), 1e-12);
+        }
+    }
+
+    public function testPmfBoundaryCases(): void
+    {
+        $uniform = new Uniform(new Randomizer(), 2, 7);
+
+        $this->assertSame(0.0, $uniform->pmf(1));
+        $this->assertSame(0.0, $uniform->pmf(0));
+        $this->assertSame(0.0, $uniform->pmf(-5));
+        $this->assertSame(0.0, $uniform->pmf(8));
+        $this->assertSame(0.0, $uniform->pmf(20));
+    }
+
+    public function testCdfKnownValues(): void
+    {
+        // Standard die Uniform(1, 6)
+        $uniform = new Uniform(new Randomizer(), 1, 6);
+
+        $this->assertEqualsWithDelta(1.0 / 6.0, $uniform->cdf(1), 1e-12);
+        $this->assertEqualsWithDelta(2.0 / 6.0, $uniform->cdf(2), 1e-12);
+        $this->assertEqualsWithDelta(3.0 / 6.0, $uniform->cdf(3), 1e-12);
+        $this->assertEqualsWithDelta(4.0 / 6.0, $uniform->cdf(4), 1e-12);
+        $this->assertEqualsWithDelta(5.0 / 6.0, $uniform->cdf(5), 1e-12);
+        $this->assertEqualsWithDelta(1.0, $uniform->cdf(6), 1e-12);
+    }
+
+    public function testCdfBoundaryCases(): void
+    {
+        $uniform = new Uniform(new Randomizer(), 3, 8);
+
+        $this->assertSame(0.0, $uniform->cdf(2));
+        $this->assertSame(0.0, $uniform->cdf(0));
+        $this->assertSame(0.0, $uniform->cdf(-10));
+        $this->assertSame(1.0, $uniform->cdf(8));
+        $this->assertSame(1.0, $uniform->cdf(9));
+        $this->assertSame(1.0, $uniform->cdf(100));
+    }
+
+    public function testCdfMatchesCumulativePmfSum(): void
+    {
+        $uniform = new Uniform(new Randomizer(), -3, 5);
+
+        $cumulativePmf = 0.0;
+        for ($k = -3; $k <= 5; $k++) {
+            $cumulativePmf += $uniform->pmf($k);
+            $this->assertEqualsWithDelta($cumulativePmf, $uniform->cdf($k), 1e-12);
+        }
+    }
 }

@@ -64,4 +64,52 @@ class ExponentialTest extends TestCase
         $expectedMean = 1.0 / $lambda; // 0.5
         $this->assertEqualsWithDelta($expectedMean, $mean, 0.05);
     }
+
+    public function testCdfKnownValues(): void
+    {
+        $lambda = 1.5;
+        $exponential = new Exponential(new Randomizer(), $lambda);
+
+        $this->assertEqualsWithDelta(0.0, $exponential->cdf(0.0), 1e-10);
+        $this->assertEqualsWithDelta(1.0 - exp(-1.0), $exponential->cdf(1.0 / $lambda), 1e-10);
+        $this->assertEqualsWithDelta(0.5, $exponential->cdf(log(2.0) / $lambda), 1e-10);
+        $this->assertEqualsWithDelta(1.0 - exp(-3.0), $exponential->cdf(2.0), 1e-10);
+    }
+
+    public function testCdfMonotonicity(): void
+    {
+        $exponential = new Exponential(new Randomizer(), 2.0);
+
+        $prev = -1.0;
+        for ($x = 0.0; $x <= 5.0; $x += 0.5) {
+            $cdf = $exponential->cdf($x);
+            $this->assertGreaterThan($prev, $cdf);
+            $this->assertLessThanOrEqual(1.0, $cdf);
+            $prev = $cdf;
+        }
+    }
+
+    public function testPdfKnownValues(): void
+    {
+        $lambda = 2.0;
+        $exponential = new Exponential(new Randomizer(), $lambda);
+
+        $this->assertEqualsWithDelta(2.0, $exponential->pdf(0.0), 1e-10);
+        $this->assertEqualsWithDelta(2.0 * exp(-1.0), $exponential->pdf(0.5), 1e-10);
+        $this->assertEqualsWithDelta(2.0 * exp(-2.0), $exponential->pdf(1.0), 1e-10);
+        $this->assertEqualsWithDelta(2.0 * exp(-4.0), $exponential->pdf(2.0), 1e-10);
+    }
+
+    public function testPdfMonotonicity(): void
+    {
+        $exponential = new Exponential(new Randomizer(), 1.0);
+
+        $prev = INF;
+        for ($x = 0.0; $x <= 5.0; $x += 0.5) {
+            $pdf = $exponential->pdf($x);
+            $this->assertLessThan($prev, $pdf);
+            $this->assertGreaterThan(0.0, $pdf);
+            $prev = $pdf;
+        }
+    }
 }

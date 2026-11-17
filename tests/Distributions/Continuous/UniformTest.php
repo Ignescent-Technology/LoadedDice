@@ -64,4 +64,41 @@ class UniformTest extends TestCase
         $mean = $sum / $samples;
         $this->assertEqualsWithDelta(20.0, $mean, 0.5);
     }
+
+    public function testCdfKnownValues(): void
+    {
+        $stdUniform = new Uniform(new Randomizer(), 0.0, 1.0);
+        $this->assertEqualsWithDelta(0.0, $stdUniform->cdf(0.0), 1e-10);
+        $this->assertEqualsWithDelta(0.25, $stdUniform->cdf(0.25), 1e-10);
+        $this->assertEqualsWithDelta(0.5, $stdUniform->cdf(0.5), 1e-10);
+        $this->assertEqualsWithDelta(0.75, $stdUniform->cdf(0.75), 1e-10);
+        $this->assertEqualsWithDelta(1.0, $stdUniform->cdf(1.0), 1e-10);
+
+        $customUniform = new Uniform(new Randomizer(), 2.0, 10.0);
+        $this->assertEqualsWithDelta(0.0, $customUniform->cdf(2.0), 1e-10);
+        $this->assertEqualsWithDelta(0.25, $customUniform->cdf(4.0), 1e-10);
+        $this->assertEqualsWithDelta(0.5, $customUniform->cdf(6.0), 1e-10);
+        $this->assertEqualsWithDelta(0.75, $customUniform->cdf(8.0), 1e-10);
+        $this->assertEqualsWithDelta(1.0, $customUniform->cdf(10.0), 1e-10);
+    }
+
+    public function testPdfKnownValues(): void
+    {
+        $stdUniform = new Uniform(new Randomizer(), 0.0, 1.0);
+        $this->assertEqualsWithDelta(1.0, $stdUniform->pdf(0.0), 1e-10);
+        $this->assertEqualsWithDelta(1.0, $stdUniform->pdf(0.5), 1e-10);
+        $this->assertEqualsWithDelta(1.0, $stdUniform->pdf(1.0), 1e-10);
+
+        $customUniform = new Uniform(new Randomizer(), 2.0, 10.0);
+        $expectedPdf = 1.0 / 8.0; // 0.125
+        $this->assertEqualsWithDelta($expectedPdf, $customUniform->pdf(2.0), 1e-10);
+        $this->assertEqualsWithDelta($expectedPdf, $customUniform->pdf(5.0), 1e-10);
+        $this->assertEqualsWithDelta($expectedPdf, $customUniform->pdf(8.0), 1e-10);
+        $this->assertEqualsWithDelta($expectedPdf, $customUniform->pdf(10.0), 1e-10);
+
+        $negUniform = new Uniform(new Randomizer(), -5.0, 5.0);
+        $this->assertEqualsWithDelta(0.1, $negUniform->pdf(0.0), 1e-10);
+        $this->assertEqualsWithDelta(0.1, $negUniform->pdf(-3.0), 1e-10);
+        $this->assertEqualsWithDelta(0.1, $negUniform->pdf(4.0), 1e-10);
+    }
 }

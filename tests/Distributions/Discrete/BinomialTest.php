@@ -95,4 +95,113 @@ class BinomialTest extends TestCase
         $expectedMean = $n * $p; // 6.0
         $this->assertEqualsWithDelta($expectedMean, $mean, 0.1);
     }
+
+    public function testPmfKnownValues(): void
+    {
+        // Binomial(n=4, p=0.5): PMF = [1/16, 4/16, 6/16, 4/16, 1/16]
+        $binomial = new Binomial(new Randomizer(), 4, 0.5);
+
+        $this->assertEqualsWithDelta(1.0 / 16.0, $binomial->pmf(0), 1e-12);
+        $this->assertEqualsWithDelta(4.0 / 16.0, $binomial->pmf(1), 1e-12);
+        $this->assertEqualsWithDelta(6.0 / 16.0, $binomial->pmf(2), 1e-12);
+        $this->assertEqualsWithDelta(4.0 / 16.0, $binomial->pmf(3), 1e-12);
+        $this->assertEqualsWithDelta(1.0 / 16.0, $binomial->pmf(4), 1e-12);
+
+        // Sum of all PMF values equals 1.0
+        $sum = 0.0;
+        for ($k = 0; $k <= 4; $k++) {
+            $sum += $binomial->pmf($k);
+        }
+        $this->assertEqualsWithDelta(1.0, $sum, 1e-12);
+    }
+
+    public function testPmfBoundaryAndEdgeCases(): void
+    {
+        $binomial = new Binomial(new Randomizer(), 5, 0.4);
+
+        $this->assertSame(0.0, $binomial->pmf(-1));
+        $this->assertSame(0.0, $binomial->pmf(-5));
+        $this->assertSame(0.0, $binomial->pmf(6));
+        $this->assertSame(0.0, $binomial->pmf(100));
+
+        // p = 0.0 edge case
+        $zeroProb = new Binomial(new Randomizer(), 10, 0.0);
+        $this->assertSame(1.0, $zeroProb->pmf(0));
+        $this->assertSame(0.0, $zeroProb->pmf(1));
+
+        // p = 1.0 edge case
+        $fullProb = new Binomial(new Randomizer(), 10, 1.0);
+        $this->assertSame(1.0, $fullProb->pmf(10));
+        $this->assertSame(0.0, $fullProb->pmf(9));
+
+        // n = 0 edge case
+        $zeroTrials = new Binomial(new Randomizer(), 0, 0.5);
+        $this->assertSame(1.0, $zeroTrials->pmf(0));
+        $this->assertSame(0.0, $zeroTrials->pmf(1));
+    }
+
+    public function testPmfNumericalStabilityWithLargeN(): void
+    {
+        $binomial = new Binomial(new Randomizer(), 100, 0.3);
+
+        // Expected mode around k = 30
+        $pmf30 = $binomial->pmf(30);
+        $this->assertIsFloat($pmf30);
+        $this->assertGreaterThan(0.08, $pmf30);
+        $this->assertLessThan(0.10, $pmf30);
+
+        // Total mass across all outcomes sums to 1.0
+        $sum = 0.0;
+        for ($k = 0; $k <= 100; $k++) {
+            $sum += $binomial->pmf($k);
+        }
+        $this->assertEqualsWithDelta(1.0, $sum, 1e-12);
+    }
+
+    public function testCdfKnownValues(): void
+    {
+        // Binomial(n=4, p=0.5): CDF = [1/16, 5/16, 11/16, 15/16, 1.0]
+        $binomial = new Binomial(new Randomizer(), 4, 0.5);
+
+        $this->assertEqualsWithDelta(1.0 / 16.0, $binomial->cdf(0), 1e-12);
+        $this->assertEqualsWithDelta(5.0 / 16.0, $binomial->cdf(1), 1e-12);
+        $this->assertEqualsWithDelta(11.0 / 16.0, $binomial->cdf(2), 1e-12);
+        $this->assertEqualsWithDelta(15.0 / 16.0, $binomial->cdf(3), 1e-12);
+        $this->assertEqualsWithDelta(1.0, $binomial->cdf(4), 1e-12);
+    }
+
+    public function testCdfBoundaryAndEdgeCases(): void
+    {
+        $binomial = new Binomial(new Randomizer(), 5, 0.4);
+
+        $this->assertSame(0.0, $binomial->cdf(-1));
+        $this->assertSame(0.0, $binomial->cdf(-10));
+        $this->assertSame(1.0, $binomial->cdf(5));
+        $this->assertSame(1.0, $binomial->cdf(6));
+        $this->assertSame(1.0, $binomial->cdf(100));
+
+        // p = 0.0 edge case
+        $zeroProb = new Binomial(new Randomizer(), 10, 0.0);
+        $this->assertSame(0.0, $zeroProb->cdf(-1));
+        $this->assertSame(1.0, $zeroProb->cdf(0));
+        $this->assertSame(1.0, $zeroProb->cdf(5));
+
+        // p = 1.0 edge case
+        $fullProb = new Binomial(new Randomizer(), 10, 1.0);
+        $this->assertSame(0.0, $fullProb->cdf(9));
+        $this->assertSame(1.0, $fullProb->cdf(10));
+        $this->assertSame(1.0, $fullProb->cdf(15));
+    }
+
+    public function testCdfMatchesCumulativePmfSum(): void
+    {
+        $n = 10;
+        $binomial = new Binomial(new Randomizer(), $n, 0.35);
+
+        $cumulativePmf = 0.0;
+        for ($k = 0; $k <= $n; $k++) {
+            $cumulativePmf += $binomial->pmf($k);
+            $this->assertEqualsWithDelta($cumulativePmf, $binomial->cdf($k), 1e-12);
+        }
+    }
 }

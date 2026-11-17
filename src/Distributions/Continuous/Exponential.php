@@ -17,4 +17,14 @@ final class Exponential implements Distribution
     {
         return -log($this->randomizer->getFloat(0.0, 1.0)) / $this->lambda;
     }
+
+    public function cdf(float $x): float
+    {
+        return 1 - exp(-$this->lambda * $x);
+    }
+
+    public function pdf(float $x): float
+    {
+        return $this->lambda * exp(-$this->lambda * $x);
+    }
 }

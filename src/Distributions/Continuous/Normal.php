@@ -2,6 +2,7 @@
 
 namespace Ignescent\LoadedDice\Distributions\Continuous;
 
+use Ignescent\LoadedDice\Utils;
 use Random\Randomizer;
 
 final class Normal implements Distribution
@@ -10,6 +11,8 @@ final class Normal implements Distribution
 
     private Uniform $uniform;
 
+    private float $variance;
+
     public function __construct(
         protected Randomizer $randomizer,
         public float $mean = 0.0,
@@ -17,6 +20,7 @@ final class Normal implements Distribution
     )
     {
         $this->uniform = new Uniform($this->randomizer, -1.0, 1.0);
+        $this->variance = pow($this->standardDeviation, 2);
     }
 
     public function random(): float
@@ -40,5 +44,15 @@ final class Normal implements Distribution
 
         $this->standardVariates[] = $x * sqrt(-2.0 * log($s) / $s);
         $this->standardVariates[] = $y * sqrt(-2.0 * log($s) / $s);
+    }
+
+    public function cdf(float $x): float
+    {
+        return 0.5 * (1 + Utils::erf(($x - $this->mean) / ($this->standardDeviation * M_SQRT2)));
+    }
+
+    public function pdf(float $x): float
+    {
+        return (1 / (sqrt(2 * M_PI * $this->variance))) * exp(-pow($x - $this->mean, 2) / (2 * $this->variance));
     }
 }

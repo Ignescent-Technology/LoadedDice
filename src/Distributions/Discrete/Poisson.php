@@ -2,6 +2,7 @@
 
 namespace Ignescent\LoadedDice\Distributions\Discrete;
 
+use Ignescent\LoadedDice\Utils;
 use Random\Randomizer;
 
 final class Poisson implements Distribution
@@ -38,5 +39,33 @@ final class Poisson implements Distribution
         } while ($p > 1.0);
 
         return $k - 1;
+    }
+
+    public function cdf(int $x): float
+    {
+        if ($x < 0) {
+            return 0.0;
+        }
+
+        if ($this->lambda <= 0.0) {
+            return 1.0;
+        }
+
+        return max(0.0, min(1.0, 1.0 - Utils::regularizedGamma($x + 1, $this->lambda)));
+    }
+
+    public function pmf(int $x): float
+    {
+        if ($x < 0) {
+            return 0.0;
+        }
+
+        if ($this->lambda <= 0.0) {
+            return $x === 0 ? 1.0 : 0.0;
+        }
+
+        $logPmf = $x * log($this->lambda) - $this->lambda - Utils::logGamma($x + 1);
+
+        return exp($logPmf);
     }
 }

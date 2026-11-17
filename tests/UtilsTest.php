@@ -420,4 +420,111 @@ class UtilsTest extends TestCase
         $this->assertEqualsWithDelta(1.0, Utils::regularizedGamma(2.5, 60.0), 1e-12);
         $this->assertEqualsWithDelta(1.0, Utils::regularizedGamma(4.0, 70.0), 1e-12);
     }
+
+    public function testRegularizedIncompleteBetaBoundaries(): void
+    {
+        $this->assertSame(0.0, Utils::regularizedIncompleteBeta(2.0, 5.0, 0.0));
+        $this->assertSame(1.0, Utils::regularizedIncompleteBeta(2.0, 5.0, 1.0));
+        $this->assertSame(0.0, Utils::regularizedIncompleteBeta(0.5, 0.5, 0.0));
+        $this->assertSame(1.0, Utils::regularizedIncompleteBeta(0.5, 0.5, 1.0));
+    }
+
+    public function testRegularizedIncompleteBetaInvalidInputs(): void
+    {
+        $this->assertTrue(is_nan(Utils::regularizedIncompleteBeta(0.0, 1.0, 0.5)));
+        $this->assertTrue(is_nan(Utils::regularizedIncompleteBeta(-1.0, 1.0, 0.5)));
+        $this->assertTrue(is_nan(Utils::regularizedIncompleteBeta(1.0, 0.0, 0.5)));
+        $this->assertTrue(is_nan(Utils::regularizedIncompleteBeta(1.0, -1.0, 0.5)));
+        $this->assertTrue(is_nan(Utils::regularizedIncompleteBeta(1.0, 1.0, -0.1)));
+        $this->assertTrue(is_nan(Utils::regularizedIncompleteBeta(1.0, 1.0, 1.1)));
+    }
+
+    public function testRegularizedIncompleteBetaSpecialCases(): void
+    {
+        // I_x(1, 1) = x
+        foreach ([0.1, 0.25, 0.5, 0.75, 0.9] as $x) {
+            $this->assertEqualsWithDelta($x, Utils::regularizedIncompleteBeta(1.0, 1.0, $x), 1e-12);
+        }
+
+        // I_x(1, b) = 1 - (1 - x)^b
+        foreach ([0.1, 0.25, 0.5, 0.75, 0.9] as $x) {
+            $expected = 1.0 - ((1.0 - $x) ** 3.0);
+            $this->assertEqualsWithDelta($expected, Utils::regularizedIncompleteBeta(1.0, 3.0, $x), 1e-12);
+        }
+
+        // I_x(a, 1) = x^a
+        foreach ([0.1, 0.25, 0.5, 0.75, 0.9] as $x) {
+            $expected = $x ** 4.0;
+            $this->assertEqualsWithDelta($expected, Utils::regularizedIncompleteBeta(4.0, 1.0, $x), 1e-12);
+        }
+
+        // I_x(0.5, 0.5) = 2/pi * asin(sqrt(x))
+        foreach ([0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95] as $x) {
+            $expected = (2.0 / M_PI) * asin(sqrt($x));
+            $this->assertEqualsWithDelta($expected, Utils::regularizedIncompleteBeta(0.5, 0.5, $x), 1e-12);
+        }
+    }
+
+    public function testRegularizedIncompleteBetaSymmetry(): void
+    {
+        $testParams = [
+            [0.5, 0.5],
+            [1.0, 2.0],
+            [2.5, 4.0],
+            [3.0, 3.0],
+            [5.0, 2.0],
+        ];
+
+        foreach ($testParams as [$a, $b]) {
+            foreach ([0.1, 0.25, 0.5, 0.75, 0.9] as $x) {
+                $ixAB = Utils::regularizedIncompleteBeta($a, $b, $x);
+                $ixBA = Utils::regularizedIncompleteBeta($b, $a, 1.0 - $x);
+                $this->assertEqualsWithDelta(1.0, $ixAB + $ixBA, 1e-12);
+                $this->assertGreaterThanOrEqual(0.0, $ixAB);
+                $this->assertLessThanOrEqual(1.0, $ixAB);
+            }
+        }
+    }
+
+    public function testRegularizedIncompleteBetaKnownValues(): void
+    {
+        // I_0.3(2, 5) = 0.579825
+        $this->assertEqualsWithDelta(0.579825, Utils::regularizedIncompleteBeta(2.0, 5.0, 0.3), 1e-12);
+
+        // I_0.4(3, 2) = 0.1792
+        $this->assertEqualsWithDelta(0.1792, Utils::regularizedIncompleteBeta(3.0, 2.0, 0.4), 1e-12);
+
+        // I_0.5(2, 2) = 0.5
+        $this->assertEqualsWithDelta(0.5, Utils::regularizedIncompleteBeta(2.0, 2.0, 0.5), 1e-12);
+    }
+
+    public function testLogGamma(): void
+    {
+        $this->assertTrue(is_nan(Utils::logGamma(0.0)));
+        $this->assertTrue(is_nan(Utils::logGamma(-1.0)));
+
+        // ln(Gamma(1)) = ln(1) = 0
+        $this->assertEqualsWithDelta(0.0, Utils::logGamma(1.0), 1e-12);
+
+        // ln(Gamma(2)) = ln(1!) = 0
+        $this->assertEqualsWithDelta(0.0, Utils::logGamma(2.0), 1e-12);
+
+        // ln(Gamma(5)) = ln(4!) = ln(24) ≈ 3.1780538303479
+        $this->assertEqualsWithDelta(log(24.0), Utils::logGamma(5.0), 1e-12);
+
+        // ln(Gamma(0.5)) = ln(sqrt(pi)) ≈ 0.5723649429247
+        $this->assertEqualsWithDelta(log(sqrt(M_PI)), Utils::logGamma(0.5), 1e-12);
+
+        // Consistency with log(Utils::gamma)
+        foreach ([0.1, 0.5, 1.5, 2.3, 5.0, 10.0, 50.0, 100.0, 140.0] as $x) {
+            $this->assertEqualsWithDelta(log(Utils::gamma($x)), Utils::logGamma($x), 1e-12);
+        }
+
+        // Works for large numbers where gamma(x) overflows float range
+        $largeLogGamma = Utils::logGamma(200.0);
+        $this->assertIsFloat($largeLogGamma);
+        $this->assertFalse(is_nan($largeLogGamma));
+        $this->assertFalse(is_infinite($largeLogGamma));
+        $this->assertGreaterThan(0.0, $largeLogGamma);
+    }
 }
