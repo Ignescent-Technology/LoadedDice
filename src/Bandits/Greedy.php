@@ -14,6 +14,6 @@ final class Greedy implements BanditStrategy
             return $experimentalData->getArmAverage($arm);
         }, $arms);
 
-        return $experimentalData->bestArm(array_combine($arms, $scores));
+        return Bandit::bestArm(array_combine($arms, $scores));
     }
 }

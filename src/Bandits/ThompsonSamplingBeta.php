@@ -23,11 +23,11 @@ final class ThompsonSamplingBeta implements BanditStrategy
             $successes = array_sum($history);
             $failures = count($history) - $successes;
 
-            $beta = new Beta($this->randomizer, $successes + 1, $failures + 1);
+            $beta = new Beta($successes + 1, $failures + 1, $this->randomizer);
 
             $scores[$arm] = $beta->random();
         }
 
-        return ExperimentalData::bestArm($scores);
+        return Bandit::bestArm($scores);
     }
 }

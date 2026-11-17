@@ -10,8 +10,8 @@ final class Poisson implements Distribution
     private float $step;
 
     public function __construct(
-        protected Randomizer $randomizer,
-        public float $lambda
+        public float $lambda,
+        protected Randomizer $randomizer = new Randomizer(),
     )
     {
         $this->step = 500.0;

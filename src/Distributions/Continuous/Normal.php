@@ -14,12 +14,12 @@ final class Normal implements Distribution
     private float $variance;
 
     public function __construct(
-        protected Randomizer $randomizer,
         public float $mean = 0.0,
         public float $standardDeviation = 1.0,
+        protected Randomizer $randomizer = new Randomizer(),
     )
     {
-        $this->uniform = new Uniform($this->randomizer, -1.0, 1.0);
+        $this->uniform = new Uniform(-1.0, 1.0, $this->randomizer);
         $this->variance = pow($this->standardDeviation, 2);
     }
 

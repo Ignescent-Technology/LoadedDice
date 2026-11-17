@@ -6,7 +6,10 @@ use Random\Randomizer;
 
 final class Geometric implements Distribution
 {
-    public function __construct(protected Randomizer $randomizer, public float $p)
+    public function __construct(
+        public float $p,
+        protected Randomizer $randomizer = new Randomizer(),
+    )
     {
     }
 

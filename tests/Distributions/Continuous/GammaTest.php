@@ -16,7 +16,7 @@ class GammaTest extends TestCase
 {
     public function testImplementsDistributionInterfaces(): void
     {
-        $gamma = new Gamma(new Randomizer(), 2.0, 1.5);
+        $gamma = new Gamma(2.0, 1.5);
 
         $this->assertInstanceOf(Distribution::class, $gamma);
         $this->assertInstanceOf(ContinuousDistribution::class, $gamma);
@@ -24,15 +24,24 @@ class GammaTest extends TestCase
 
     public function testConstructorSetsProperties(): void
     {
-        $gamma = new Gamma(new Randomizer(), 2.5, 3.5);
+        $gamma = new Gamma(2.5, 3.5);
 
         $this->assertSame(2.5, $gamma->shape);
         $this->assertSame(3.5, $gamma->scale);
     }
 
+    public function testConstructorDefaultRandomizer(): void
+    {
+        $gamma = new Gamma(2.0, 1.5);
+        $val = $gamma->random();
+
+        $this->assertIsFloat($val);
+        $this->assertGreaterThan(0.0, $val);
+    }
+
     public function testRandomReturnsPositiveFloat(): void
     {
-        $gamma = new Gamma(new Randomizer(new Mt19937(42)), 2.0, 1.5);
+        $gamma = new Gamma(2.0, 1.5, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 50; $i++) {
             $value = $gamma->random();
@@ -43,8 +52,8 @@ class GammaTest extends TestCase
 
     public function testDeterministicWithSameSeed(): void
     {
-        $gamma1 = new Gamma(new Randomizer(new Mt19937(12345)), 3.0, 2.0);
-        $gamma2 = new Gamma(new Randomizer(new Mt19937(12345)), 3.0, 2.0);
+        $gamma1 = new Gamma(3.0, 2.0, new Randomizer(new Mt19937(12345)));
+        $gamma2 = new Gamma(3.0, 2.0, new Randomizer(new Mt19937(12345)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame($gamma1->random(), $gamma2->random());
@@ -53,7 +62,7 @@ class GammaTest extends TestCase
 
     public function testCdfBoundaryConditions(): void
     {
-        $gamma = new Gamma(new Randomizer(), 2.0, 1.5);
+        $gamma = new Gamma(2.0, 1.5);
 
         $this->assertSame(0.0, $gamma->cdf(-5.0));
         $this->assertSame(0.0, $gamma->cdf(-0.001));
@@ -64,7 +73,7 @@ class GammaTest extends TestCase
     {
         // Gamma(1, scale) is Exponential with lambda = 1 / scale
         $scale = 2.5;
-        $gamma = new Gamma(new Randomizer(), 1.0, $scale);
+        $gamma = new Gamma(1.0, $scale);
 
         foreach ([0.1, 0.5, 1.0, 2.5, 5.0, 10.0] as $x) {
             $expected = 1.0 - exp(-$x / $scale);
@@ -75,22 +84,22 @@ class GammaTest extends TestCase
     public function testCdfKnownValues(): void
     {
         // Gamma(2, 2): CDF(2) = 1 - 2*exp(-1)
-        $gamma1 = new Gamma(new Randomizer(), 2.0, 2.0);
+        $gamma1 = new Gamma(2.0, 2.0);
         $this->assertEqualsWithDelta(1.0 - 2.0 * exp(-1.0), $gamma1->cdf(2.0), 1e-12);
 
         // Gamma(3, 1): CDF(1) = 1 - 2.5*exp(-1)
-        $gamma2 = new Gamma(new Randomizer(), 3.0, 1.0);
+        $gamma2 = new Gamma(3.0, 1.0);
         $this->assertEqualsWithDelta(1.0 - 2.5 * exp(-1.0), $gamma2->cdf(1.0), 1e-12);
 
         // Gamma(0.5, 2): Chi-squared with 1 df. CDF(1) = erf(1 / sqrt(2)) ≈ 0.682689492137086
-        $gamma3 = new Gamma(new Randomizer(), 0.5, 2.0);
+        $gamma3 = new Gamma(0.5, 2.0);
         $this->assertEqualsWithDelta(0.682689492137086, $gamma3->cdf(1.0), 1e-12);
         $this->assertEqualsWithDelta(Utils::erf(1.0 / M_SQRT2), $gamma3->cdf(1.0), 1e-6);
     }
 
     public function testCdfMonotonicity(): void
     {
-        $gamma = new Gamma(new Randomizer(), 2.5, 1.5);
+        $gamma = new Gamma(2.5, 1.5);
 
         $prev = -1.0;
         for ($x = 0.0; $x <= 20.0; $x += 0.5) {
@@ -104,7 +113,7 @@ class GammaTest extends TestCase
 
     public function testCdfAsymptoticUpperLimit(): void
     {
-        $gamma = new Gamma(new Randomizer(), 2.0, 1.5);
+        $gamma = new Gamma(2.0, 1.5);
 
         $this->assertEqualsWithDelta(1.0, $gamma->cdf(100.0), 1e-12);
         $this->assertEqualsWithDelta(1.0, $gamma->cdf(1000.0), 1e-12);
@@ -113,9 +122,9 @@ class GammaTest extends TestCase
     public function testPdfBoundaryAndEdgeCases(): void
     {
         // Negative x returns 0.0
-        $gammaShapeLt1 = new Gamma(new Randomizer(), 0.5, 2.0);
-        $gammaShapeEq1 = new Gamma(new Randomizer(), 1.0, 2.0);
-        $gammaShapeGt1 = new Gamma(new Randomizer(), 2.5, 2.0);
+        $gammaShapeLt1 = new Gamma(0.5, 2.0);
+        $gammaShapeEq1 = new Gamma(1.0, 2.0);
+        $gammaShapeGt1 = new Gamma(2.5, 2.0);
 
         $this->assertSame(0.0, $gammaShapeLt1->pdf(-1.0));
         $this->assertSame(0.0, $gammaShapeEq1->pdf(-1.0));
@@ -131,7 +140,7 @@ class GammaTest extends TestCase
     {
         // Gamma(1, scale) is Exponential with lambda = 1 / scale
         $scale = 3.0;
-        $gamma = new Gamma(new Randomizer(), 1.0, $scale);
+        $gamma = new Gamma(1.0, $scale);
 
         foreach ([0.0, 0.5, 1.0, 2.0, 4.0, 6.0] as $x) {
             $expected = (1.0 / $scale) * exp(-$x / $scale);
@@ -142,22 +151,22 @@ class GammaTest extends TestCase
     public function testPdfKnownValues(): void
     {
         // Gamma(2, 2): f(2) = 2 * exp(-1) / 4 = 1 / (2*e)
-        $gamma1 = new Gamma(new Randomizer(), 2.0, 2.0);
+        $gamma1 = new Gamma(2.0, 2.0);
         $this->assertEqualsWithDelta(1.0 / (2.0 * M_E), $gamma1->pdf(2.0), 1e-12);
 
         // Gamma(3, 1): f(1) = 1^2 * exp(-1) / 2! = 1 / (2*e)
-        $gamma2 = new Gamma(new Randomizer(), 3.0, 1.0);
+        $gamma2 = new Gamma(3.0, 1.0);
         $this->assertEqualsWithDelta(1.0 / (2.0 * M_E), $gamma2->pdf(1.0), 1e-12);
 
         // Gamma(0.5, 2): f(1) = exp(-0.5) / sqrt(2*pi)
-        $gamma3 = new Gamma(new Randomizer(), 0.5, 2.0);
+        $gamma3 = new Gamma(0.5, 2.0);
         $this->assertEqualsWithDelta(exp(-0.5) / sqrt(2.0 * M_PI), $gamma3->pdf(1.0), 1e-12);
     }
 
     public function testPdfNumericalStabilityWithLargeParameters(): void
     {
         // Large shape parameter that would overflow in direct power/gamma computation
-        $gammaLarge = new Gamma(new Randomizer(), 100.0, 2.0);
+        $gammaLarge = new Gamma(100.0, 2.0);
 
         // Peak / mode of Gamma(k, theta) is (k - 1) * theta = 99 * 2 = 198
         $peakPdf = $gammaLarge->pdf(198.0);
@@ -177,7 +186,7 @@ class GammaTest extends TestCase
         $this->assertSame(0.0, $extremeTailPdf);
 
         // Shape = 200 where direct evaluation of x^(k-1), scale^k, or gamma(k) would overflow double float range
-        $gammaExtreme = new Gamma(new Randomizer(), 200.0, 1.0);
+        $gammaExtreme = new Gamma(200.0, 1.0);
         $extremePeak = $gammaExtreme->pdf(199.0);
         $this->assertIsFloat($extremePeak);
         $this->assertFalse(is_nan($extremePeak));
@@ -187,7 +196,7 @@ class GammaTest extends TestCase
 
     public function testPdfNumericalIntegralApproximation(): void
     {
-        $gamma = new Gamma(new Randomizer(), 3.0, 2.0);
+        $gamma = new Gamma(3.0, 2.0);
 
         // Integrate PDF from 0 to 30 via trapezoidal rule
         $a = 0.001;

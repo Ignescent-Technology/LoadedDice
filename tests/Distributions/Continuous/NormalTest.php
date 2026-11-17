@@ -15,7 +15,7 @@ class NormalTest extends TestCase
 {
     public function testImplementsDistributionInterfaces(): void
     {
-        $normal = new Normal(new Randomizer());
+        $normal = new Normal();
 
         $this->assertInstanceOf(Distribution::class, $normal);
         $this->assertInstanceOf(ContinuousDistribution::class, $normal);
@@ -23,15 +23,23 @@ class NormalTest extends TestCase
 
     public function testConstructorDefaultProperties(): void
     {
-        $normal = new Normal(new Randomizer());
+        $normal = new Normal();
 
         $this->assertSame(0.0, $normal->mean);
         $this->assertSame(1.0, $normal->standardDeviation);
     }
 
+    public function testConstructorDefaultRandomizer(): void
+    {
+        $normal = new Normal();
+        $val = $normal->random();
+
+        $this->assertIsFloat($val);
+    }
+
     public function testConstructorCustomProperties(): void
     {
-        $normal = new Normal(new Randomizer(), 5.0, 2.5);
+        $normal = new Normal(5.0, 2.5);
 
         $this->assertSame(5.0, $normal->mean);
         $this->assertSame(2.5, $normal->standardDeviation);
@@ -39,7 +47,7 @@ class NormalTest extends TestCase
 
     public function testRandomReturnsFloat(): void
     {
-        $normal = new Normal(new Randomizer(new Mt19937(42)), 10.0, 2.0);
+        $normal = new Normal(10.0, 2.0, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 50; $i++) {
             $value = $normal->random();
@@ -49,8 +57,8 @@ class NormalTest extends TestCase
 
     public function testDeterministicWithSameSeed(): void
     {
-        $normal1 = new Normal(new Randomizer(new Mt19937(12345)), 10.0, 2.0);
-        $normal2 = new Normal(new Randomizer(new Mt19937(12345)), 10.0, 2.0);
+        $normal1 = new Normal(10.0, 2.0, new Randomizer(new Mt19937(12345)));
+        $normal2 = new Normal(10.0, 2.0, new Randomizer(new Mt19937(12345)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame($normal1->random(), $normal2->random());
@@ -61,7 +69,7 @@ class NormalTest extends TestCase
     {
         $targetMean = 10.0;
         $targetStdDev = 2.0;
-        $normal = new Normal(new Randomizer(new Mt19937(42)), $targetMean, $targetStdDev);
+        $normal = new Normal($targetMean, $targetStdDev, new Randomizer(new Mt19937(42)));
         $samples = 5000;
         $values = [];
 
@@ -78,7 +86,7 @@ class NormalTest extends TestCase
 
     public function testCdfKnownValues(): void
     {
-        $normal = new Normal(new Randomizer(), 0.0, 1.0);
+        $normal = new Normal(0.0, 1.0);
 
         $this->assertEqualsWithDelta(0.5, $normal->cdf(0.0), 1e-7);
         $this->assertEqualsWithDelta(0.8413447, $normal->cdf(1.0), 1e-6);
@@ -87,7 +95,7 @@ class NormalTest extends TestCase
         $this->assertEqualsWithDelta(0.0227501, $normal->cdf(-2.0), 1e-6);
 
         // Non-standard normal distribution
-        $nonStandard = new Normal(new Randomizer(), 10.0, 2.5);
+        $nonStandard = new Normal(10.0, 2.5);
         $this->assertEqualsWithDelta(0.5, $nonStandard->cdf(10.0), 1e-7);
         $this->assertEqualsWithDelta(0.8413447, $nonStandard->cdf(12.5), 1e-6);
         $this->assertEqualsWithDelta(0.1586553, $nonStandard->cdf(7.5), 1e-6);
@@ -97,7 +105,7 @@ class NormalTest extends TestCase
     {
         $mean = 5.0;
         $stdDev = 1.8;
-        $normal = new Normal(new Randomizer(), $mean, $stdDev);
+        $normal = new Normal($mean, $stdDev);
 
         $offsets = [0.2, 0.5, 1.0, 1.8, 3.6];
         foreach ($offsets as $offset) {
@@ -109,7 +117,7 @@ class NormalTest extends TestCase
 
     public function testPdfKnownValues(): void
     {
-        $stdNormal = new Normal(new Randomizer(), 0.0, 1.0);
+        $stdNormal = new Normal(0.0, 1.0);
 
         $invSqrt2Pi = 1.0 / sqrt(2 * M_PI);
         $this->assertEqualsWithDelta($invSqrt2Pi, $stdNormal->pdf(0.0), 1e-10);
@@ -121,7 +129,7 @@ class NormalTest extends TestCase
         // Non-standard normal
         $mean = 4.0;
         $stdDev = 2.0;
-        $normal = new Normal(new Randomizer(), $mean, $stdDev);
+        $normal = new Normal($mean, $stdDev);
         $expectedPeak = 1.0 / ($stdDev * sqrt(2 * M_PI));
         $this->assertEqualsWithDelta($expectedPeak, $normal->pdf(4.0), 1e-10);
         $this->assertEqualsWithDelta($expectedPeak * exp(-0.5), $normal->pdf(6.0), 1e-10);
@@ -132,7 +140,7 @@ class NormalTest extends TestCase
     {
         $mean = 7.0;
         $stdDev = 3.0;
-        $normal = new Normal(new Randomizer(), $mean, $stdDev);
+        $normal = new Normal($mean, $stdDev);
 
         $offsets = [0.1, 0.5, 1.5, 3.0, 6.0];
         foreach ($offsets as $offset) {

@@ -15,7 +15,7 @@ class UniformTest extends TestCase
 {
     public function testImplementsDistributionInterfaces(): void
     {
-        $uniform = new Uniform(new Randomizer(), 1, 6);
+        $uniform = new Uniform(1, 6);
 
         $this->assertInstanceOf(Distribution::class, $uniform);
         $this->assertInstanceOf(DiscreteDistribution::class, $uniform);
@@ -23,15 +23,25 @@ class UniformTest extends TestCase
 
     public function testConstructorSetsProperties(): void
     {
-        $uniform = new Uniform(new Randomizer(), 10, 20);
+        $uniform = new Uniform(10, 20);
 
         $this->assertSame(10, $uniform->min);
         $this->assertSame(20, $uniform->max);
     }
 
+    public function testConstructorDefaultRandomizer(): void
+    {
+        $uniform = new Uniform(1, 6);
+        $val = $uniform->random();
+
+        $this->assertIsInt($val);
+        $this->assertGreaterThanOrEqual(1, $val);
+        $this->assertLessThanOrEqual(6, $val);
+    }
+
     public function testRandomReturnsIntWithinBounds(): void
     {
-        $uniform = new Uniform(new Randomizer(new Mt19937(42)), 1, 6);
+        $uniform = new Uniform(1, 6, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 50; $i++) {
             $value = $uniform->random();
@@ -43,7 +53,7 @@ class UniformTest extends TestCase
 
     public function testRandomWithEqualMinAndMax(): void
     {
-        $uniform = new Uniform(new Randomizer(new Mt19937(42)), 7, 7);
+        $uniform = new Uniform(7, 7, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 10; $i++) {
             $this->assertSame(7, $uniform->random());
@@ -52,8 +62,8 @@ class UniformTest extends TestCase
 
     public function testDeterministicWithSameSeed(): void
     {
-        $uniform1 = new Uniform(new Randomizer(new Mt19937(12345)), 1, 100);
-        $uniform2 = new Uniform(new Randomizer(new Mt19937(12345)), 1, 100);
+        $uniform1 = new Uniform(1, 100, new Randomizer(new Mt19937(12345)));
+        $uniform2 = new Uniform(1, 100, new Randomizer(new Mt19937(12345)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame($uniform1->random(), $uniform2->random());
@@ -62,7 +72,7 @@ class UniformTest extends TestCase
 
     public function testDistributionMeanApproximation(): void
     {
-        $uniform = new Uniform(new Randomizer(new Mt19937(42)), 1, 6);
+        $uniform = new Uniform(1, 6, new Randomizer(new Mt19937(42)));
         $samples = 5000;
         $sum = 0;
 
@@ -78,18 +88,18 @@ class UniformTest extends TestCase
     public function testPmfKnownValues(): void
     {
         // Standard six-sided die Uniform(1, 6): PMF = 1/6 for all k in 1..6
-        $uniform = new Uniform(new Randomizer(), 1, 6);
+        $uniform = new Uniform(1, 6);
 
         for ($k = 1; $k <= 6; $k++) {
             $this->assertEqualsWithDelta(1.0 / 6.0, $uniform->pmf($k), 1e-12);
         }
 
         // Single outcome Uniform(5, 5)
-        $singlePoint = new Uniform(new Randomizer(), 5, 5);
+        $singlePoint = new Uniform(5, 5);
         $this->assertSame(1.0, $singlePoint->pmf(5));
 
         // Range with negative values Uniform(-2, 2) has 5 outcomes
-        $symmetric = new Uniform(new Randomizer(), -2, 2);
+        $symmetric = new Uniform(-2, 2);
         for ($k = -2; $k <= 2; $k++) {
             $this->assertEqualsWithDelta(0.2, $symmetric->pmf($k), 1e-12);
         }
@@ -97,7 +107,7 @@ class UniformTest extends TestCase
 
     public function testPmfBoundaryCases(): void
     {
-        $uniform = new Uniform(new Randomizer(), 2, 7);
+        $uniform = new Uniform(2, 7);
 
         $this->assertSame(0.0, $uniform->pmf(1));
         $this->assertSame(0.0, $uniform->pmf(0));
@@ -109,7 +119,7 @@ class UniformTest extends TestCase
     public function testCdfKnownValues(): void
     {
         // Standard die Uniform(1, 6)
-        $uniform = new Uniform(new Randomizer(), 1, 6);
+        $uniform = new Uniform(1, 6);
 
         $this->assertEqualsWithDelta(1.0 / 6.0, $uniform->cdf(1), 1e-12);
         $this->assertEqualsWithDelta(2.0 / 6.0, $uniform->cdf(2), 1e-12);
@@ -121,7 +131,7 @@ class UniformTest extends TestCase
 
     public function testCdfBoundaryCases(): void
     {
-        $uniform = new Uniform(new Randomizer(), 3, 8);
+        $uniform = new Uniform(3, 8);
 
         $this->assertSame(0.0, $uniform->cdf(2));
         $this->assertSame(0.0, $uniform->cdf(0));
@@ -133,7 +143,7 @@ class UniformTest extends TestCase
 
     public function testCdfMatchesCumulativePmfSum(): void
     {
-        $uniform = new Uniform(new Randomizer(), -3, 5);
+        $uniform = new Uniform(-3, 5);
 
         $cumulativePmf = 0.0;
         for ($k = -3; $k <= 5; $k++) {

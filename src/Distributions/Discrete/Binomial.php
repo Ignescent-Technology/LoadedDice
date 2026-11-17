@@ -8,9 +8,9 @@ use Random\Randomizer;
 final class Binomial implements Distribution
 {
     public function __construct(
-        protected Randomizer $randomizer,
         public int $n,
         public float $p,
+        protected Randomizer $randomizer = new Randomizer(),
     )
     {
     }

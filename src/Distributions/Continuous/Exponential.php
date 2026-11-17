@@ -7,8 +7,8 @@ use Random\Randomizer;
 final class Exponential implements Distribution
 {
     public function __construct(
-        protected Randomizer $randomizer,
         public float $lambda,
+        protected Randomizer $randomizer = new Randomizer(),
     )
     {
     }

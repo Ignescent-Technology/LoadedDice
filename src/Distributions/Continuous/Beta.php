@@ -11,13 +11,13 @@ final class Beta implements Distribution
     private Gamma $betaGamma;
 
     public function __construct(
-        protected Randomizer $randomizer,
         public float $alpha,
         public float $beta,
+        protected Randomizer $randomizer = new Randomizer(),
     )
     {
-        $this->alphaGamma = new Gamma($this->randomizer, $this->alpha, 1.0);
-        $this->betaGamma = new Gamma($this->randomizer, $this->beta, 1.0);
+        $this->alphaGamma = new Gamma($this->alpha, 1.0, $this->randomizer);
+        $this->betaGamma = new Gamma($this->beta, 1.0, $this->randomizer);
     }
 
     public function random(): float

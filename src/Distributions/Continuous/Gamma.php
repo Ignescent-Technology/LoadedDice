@@ -11,13 +11,13 @@ final class Gamma implements Distribution
     private Normal $normal;
 
     public function __construct(
-        protected Randomizer $randomizer,
         public float $shape,
         public float $scale,
+        protected Randomizer $randomizer = new Randomizer(),
     )
     {
-        $this->uniform = new Uniform($this->randomizer, 0.0, 1.0);
-        $this->normal = new Normal($this->randomizer);
+        $this->uniform = new Uniform(0.0, 1.0, $this->randomizer);
+        $this->normal = new Normal(0.0, 1.0, $this->randomizer);
     }
 
     public function random(): float

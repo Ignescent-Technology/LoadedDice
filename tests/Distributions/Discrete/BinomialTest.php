@@ -15,7 +15,7 @@ class BinomialTest extends TestCase
 {
     public function testImplementsDistributionInterfaces(): void
     {
-        $binomial = new Binomial(new Randomizer(), 10, 0.5);
+        $binomial = new Binomial(10, 0.5);
 
         $this->assertInstanceOf(Distribution::class, $binomial);
         $this->assertInstanceOf(DiscreteDistribution::class, $binomial);
@@ -23,15 +23,25 @@ class BinomialTest extends TestCase
 
     public function testConstructorSetsProperties(): void
     {
-        $binomial = new Binomial(new Randomizer(), 20, 0.7);
+        $binomial = new Binomial(20, 0.7);
 
         $this->assertSame(20, $binomial->n);
         $this->assertSame(0.7, $binomial->p);
     }
 
+    public function testConstructorDefaultRandomizer(): void
+    {
+        $binomial = new Binomial(10, 0.5);
+        $val = $binomial->random();
+
+        $this->assertIsInt($val);
+        $this->assertGreaterThanOrEqual(0, $val);
+        $this->assertLessThanOrEqual(10, $val);
+    }
+
     public function testRandomReturnsIntWithinBounds(): void
     {
-        $binomial = new Binomial(new Randomizer(new Mt19937(42)), 10, 0.4);
+        $binomial = new Binomial(10, 0.4, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 50; $i++) {
             $value = $binomial->random();
@@ -43,7 +53,7 @@ class BinomialTest extends TestCase
 
     public function testZeroProbabilityAlwaysReturnsZero(): void
     {
-        $binomial = new Binomial(new Randomizer(new Mt19937(42)), 10, 0.0);
+        $binomial = new Binomial(10, 0.0, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame(0, $binomial->random());
@@ -53,7 +63,7 @@ class BinomialTest extends TestCase
     public function testFullProbabilityAlwaysReturnsN(): void
     {
         $n = 15;
-        $binomial = new Binomial(new Randomizer(new Mt19937(42)), $n, 1.0);
+        $binomial = new Binomial($n, 1.0, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame($n, $binomial->random());
@@ -62,7 +72,7 @@ class BinomialTest extends TestCase
 
     public function testZeroTrialsReturnsZero(): void
     {
-        $binomial = new Binomial(new Randomizer(new Mt19937(42)), 0, 0.5);
+        $binomial = new Binomial(0, 0.5, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 10; $i++) {
             $this->assertSame(0, $binomial->random());
@@ -71,8 +81,8 @@ class BinomialTest extends TestCase
 
     public function testDeterministicWithSameSeed(): void
     {
-        $binomial1 = new Binomial(new Randomizer(new Mt19937(12345)), 10, 0.3);
-        $binomial2 = new Binomial(new Randomizer(new Mt19937(12345)), 10, 0.3);
+        $binomial1 = new Binomial(10, 0.3, new Randomizer(new Mt19937(12345)));
+        $binomial2 = new Binomial(10, 0.3, new Randomizer(new Mt19937(12345)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame($binomial1->random(), $binomial2->random());
@@ -83,7 +93,7 @@ class BinomialTest extends TestCase
     {
         $n = 20;
         $p = 0.3;
-        $binomial = new Binomial(new Randomizer(new Mt19937(42)), $n, $p);
+        $binomial = new Binomial($n, $p, new Randomizer(new Mt19937(42)));
         $samples = 5000;
         $sum = 0;
 
@@ -99,7 +109,7 @@ class BinomialTest extends TestCase
     public function testPmfKnownValues(): void
     {
         // Binomial(n=4, p=0.5): PMF = [1/16, 4/16, 6/16, 4/16, 1/16]
-        $binomial = new Binomial(new Randomizer(), 4, 0.5);
+        $binomial = new Binomial(4, 0.5);
 
         $this->assertEqualsWithDelta(1.0 / 16.0, $binomial->pmf(0), 1e-12);
         $this->assertEqualsWithDelta(4.0 / 16.0, $binomial->pmf(1), 1e-12);
@@ -117,7 +127,7 @@ class BinomialTest extends TestCase
 
     public function testPmfBoundaryAndEdgeCases(): void
     {
-        $binomial = new Binomial(new Randomizer(), 5, 0.4);
+        $binomial = new Binomial(5, 0.4);
 
         $this->assertSame(0.0, $binomial->pmf(-1));
         $this->assertSame(0.0, $binomial->pmf(-5));
@@ -125,24 +135,24 @@ class BinomialTest extends TestCase
         $this->assertSame(0.0, $binomial->pmf(100));
 
         // p = 0.0 edge case
-        $zeroProb = new Binomial(new Randomizer(), 10, 0.0);
+        $zeroProb = new Binomial(10, 0.0);
         $this->assertSame(1.0, $zeroProb->pmf(0));
         $this->assertSame(0.0, $zeroProb->pmf(1));
 
         // p = 1.0 edge case
-        $fullProb = new Binomial(new Randomizer(), 10, 1.0);
+        $fullProb = new Binomial(10, 1.0);
         $this->assertSame(1.0, $fullProb->pmf(10));
         $this->assertSame(0.0, $fullProb->pmf(9));
 
         // n = 0 edge case
-        $zeroTrials = new Binomial(new Randomizer(), 0, 0.5);
+        $zeroTrials = new Binomial(0, 0.5);
         $this->assertSame(1.0, $zeroTrials->pmf(0));
         $this->assertSame(0.0, $zeroTrials->pmf(1));
     }
 
     public function testPmfNumericalStabilityWithLargeN(): void
     {
-        $binomial = new Binomial(new Randomizer(), 100, 0.3);
+        $binomial = new Binomial(100, 0.3);
 
         // Expected mode around k = 30
         $pmf30 = $binomial->pmf(30);
@@ -161,7 +171,7 @@ class BinomialTest extends TestCase
     public function testCdfKnownValues(): void
     {
         // Binomial(n=4, p=0.5): CDF = [1/16, 5/16, 11/16, 15/16, 1.0]
-        $binomial = new Binomial(new Randomizer(), 4, 0.5);
+        $binomial = new Binomial(4, 0.5);
 
         $this->assertEqualsWithDelta(1.0 / 16.0, $binomial->cdf(0), 1e-12);
         $this->assertEqualsWithDelta(5.0 / 16.0, $binomial->cdf(1), 1e-12);
@@ -172,7 +182,7 @@ class BinomialTest extends TestCase
 
     public function testCdfBoundaryAndEdgeCases(): void
     {
-        $binomial = new Binomial(new Randomizer(), 5, 0.4);
+        $binomial = new Binomial(5, 0.4);
 
         $this->assertSame(0.0, $binomial->cdf(-1));
         $this->assertSame(0.0, $binomial->cdf(-10));
@@ -181,13 +191,13 @@ class BinomialTest extends TestCase
         $this->assertSame(1.0, $binomial->cdf(100));
 
         // p = 0.0 edge case
-        $zeroProb = new Binomial(new Randomizer(), 10, 0.0);
+        $zeroProb = new Binomial(10, 0.0);
         $this->assertSame(0.0, $zeroProb->cdf(-1));
         $this->assertSame(1.0, $zeroProb->cdf(0));
         $this->assertSame(1.0, $zeroProb->cdf(5));
 
         // p = 1.0 edge case
-        $fullProb = new Binomial(new Randomizer(), 10, 1.0);
+        $fullProb = new Binomial(10, 1.0);
         $this->assertSame(0.0, $fullProb->cdf(9));
         $this->assertSame(1.0, $fullProb->cdf(10));
         $this->assertSame(1.0, $fullProb->cdf(15));
@@ -196,7 +206,7 @@ class BinomialTest extends TestCase
     public function testCdfMatchesCumulativePmfSum(): void
     {
         $n = 10;
-        $binomial = new Binomial(new Randomizer(), $n, 0.35);
+        $binomial = new Binomial($n, 0.35);
 
         $cumulativePmf = 0.0;
         for ($k = 0; $k <= $n; $k++) {

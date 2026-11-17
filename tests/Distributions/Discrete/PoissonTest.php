@@ -15,7 +15,7 @@ class PoissonTest extends TestCase
 {
     public function testImplementsDistributionInterfaces(): void
     {
-        $poisson = new Poisson(new Randomizer(), 4.0);
+        $poisson = new Poisson(4.0);
 
         $this->assertInstanceOf(Distribution::class, $poisson);
         $this->assertInstanceOf(DiscreteDistribution::class, $poisson);
@@ -23,14 +23,23 @@ class PoissonTest extends TestCase
 
     public function testConstructorSetsProperties(): void
     {
-        $poisson = new Poisson(new Randomizer(), 5.5);
+        $poisson = new Poisson(5.5);
 
         $this->assertSame(5.5, $poisson->lambda);
     }
 
+    public function testConstructorDefaultRandomizer(): void
+    {
+        $poisson = new Poisson(4.0);
+        $val = $poisson->random();
+
+        $this->assertIsInt($val);
+        $this->assertGreaterThanOrEqual(0, $val);
+    }
+
     public function testRandomReturnsNonNegativeInt(): void
     {
-        $poisson = new Poisson(new Randomizer(new Mt19937(42)), 4.0);
+        $poisson = new Poisson(4.0, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 50; $i++) {
             $value = $poisson->random();
@@ -41,8 +50,8 @@ class PoissonTest extends TestCase
 
     public function testDeterministicWithSameSeed(): void
     {
-        $poisson1 = new Poisson(new Randomizer(new Mt19937(12345)), 3.5);
-        $poisson2 = new Poisson(new Randomizer(new Mt19937(12345)), 3.5);
+        $poisson1 = new Poisson(3.5, new Randomizer(new Mt19937(12345)));
+        $poisson2 = new Poisson(3.5, new Randomizer(new Mt19937(12345)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame($poisson1->random(), $poisson2->random());
@@ -52,7 +61,7 @@ class PoissonTest extends TestCase
     public function testDistributionMeanApproximation(): void
     {
         $lambda = 4.0;
-        $poisson = new Poisson(new Randomizer(new Mt19937(42)), $lambda);
+        $poisson = new Poisson($lambda, new Randomizer(new Mt19937(42)));
         $samples = 5000;
         $sum = 0;
 
@@ -67,7 +76,7 @@ class PoissonTest extends TestCase
     public function testLargeLambdaSupportsStepThreshold(): void
     {
         $lambda = 600.0;
-        $poisson = new Poisson(new Randomizer(new Mt19937(42)), $lambda);
+        $poisson = new Poisson($lambda, new Randomizer(new Mt19937(42)));
 
         $value = $poisson->random();
         $this->assertIsInt($value);
@@ -81,7 +90,7 @@ class PoissonTest extends TestCase
         // PMF(1) = 2 * e^-2
         // PMF(2) = 2 * e^-2
         // PMF(3) = (4/3) * e^-2
-        $poisson = new Poisson(new Randomizer(), 2.0);
+        $poisson = new Poisson(2.0);
 
         $this->assertEqualsWithDelta(exp(-2.0), $poisson->pmf(0), 1e-12);
         $this->assertEqualsWithDelta(2.0 * exp(-2.0), $poisson->pmf(1), 1e-12);
@@ -98,20 +107,20 @@ class PoissonTest extends TestCase
 
     public function testPmfBoundaryAndEdgeCases(): void
     {
-        $poisson = new Poisson(new Randomizer(), 3.0);
+        $poisson = new Poisson(3.0);
 
         $this->assertSame(0.0, $poisson->pmf(-1));
         $this->assertSame(0.0, $poisson->pmf(-10));
 
         // lambda <= 0.0 edge case
-        $zeroLambda = new Poisson(new Randomizer(), 0.0);
+        $zeroLambda = new Poisson(0.0);
         $this->assertSame(1.0, $zeroLambda->pmf(0));
         $this->assertSame(0.0, $zeroLambda->pmf(1));
     }
 
     public function testPmfNumericalStabilityWithLargeParameters(): void
     {
-        $poisson = new Poisson(new Randomizer(), 100.0);
+        $poisson = new Poisson(100.0);
 
         // Peak / mode around lambda = 100
         $peakPmf = $poisson->pmf(100);
@@ -133,7 +142,7 @@ class PoissonTest extends TestCase
         // CDF(1) = 3 * e^-2
         // CDF(2) = 5 * e^-2
         // CDF(3) = (19/3) * e^-2
-        $poisson = new Poisson(new Randomizer(), 2.0);
+        $poisson = new Poisson(2.0);
 
         $this->assertEqualsWithDelta(exp(-2.0), $poisson->cdf(0), 1e-12);
         $this->assertEqualsWithDelta(3.0 * exp(-2.0), $poisson->cdf(1), 1e-12);
@@ -143,13 +152,13 @@ class PoissonTest extends TestCase
 
     public function testCdfBoundaryAndEdgeCases(): void
     {
-        $poisson = new Poisson(new Randomizer(), 2.5);
+        $poisson = new Poisson(2.5);
 
         $this->assertSame(0.0, $poisson->cdf(-1));
         $this->assertSame(0.0, $poisson->cdf(-10));
 
         // lambda <= 0.0 edge case
-        $zeroLambda = new Poisson(new Randomizer(), 0.0);
+        $zeroLambda = new Poisson(0.0);
         $this->assertSame(0.0, $zeroLambda->cdf(-1));
         $this->assertSame(1.0, $zeroLambda->cdf(0));
         $this->assertSame(1.0, $zeroLambda->cdf(5));
@@ -160,7 +169,7 @@ class PoissonTest extends TestCase
 
     public function testCdfMatchesCumulativePmfSum(): void
     {
-        $poisson = new Poisson(new Randomizer(), 3.5);
+        $poisson = new Poisson(3.5);
 
         $cumulativePmf = 0.0;
         for ($k = 0; $k <= 20; $k++) {

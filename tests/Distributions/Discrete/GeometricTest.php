@@ -15,7 +15,7 @@ class GeometricTest extends TestCase
 {
     public function testImplementsDistributionInterfaces(): void
     {
-        $geometric = new Geometric(new Randomizer(), 0.5);
+        $geometric = new Geometric(0.5);
 
         $this->assertInstanceOf(Distribution::class, $geometric);
         $this->assertInstanceOf(DiscreteDistribution::class, $geometric);
@@ -23,14 +23,23 @@ class GeometricTest extends TestCase
 
     public function testConstructorSetsProperties(): void
     {
-        $geometric = new Geometric(new Randomizer(), 0.25);
+        $geometric = new Geometric(0.25);
 
         $this->assertSame(0.25, $geometric->p);
     }
 
+    public function testConstructorDefaultRandomizer(): void
+    {
+        $geometric = new Geometric(0.5);
+        $val = $geometric->random();
+
+        $this->assertIsInt($val);
+        $this->assertGreaterThanOrEqual(0, $val);
+    }
+
     public function testRandomReturnsNonNegativeInt(): void
     {
-        $geometric = new Geometric(new Randomizer(new Mt19937(42)), 0.3);
+        $geometric = new Geometric(0.3, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 50; $i++) {
             $value = $geometric->random();
@@ -41,7 +50,7 @@ class GeometricTest extends TestCase
 
     public function testFullProbabilityAlwaysReturnsZero(): void
     {
-        $geometric = new Geometric(new Randomizer(new Mt19937(42)), 1.0);
+        $geometric = new Geometric(1.0, new Randomizer(new Mt19937(42)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame(0, $geometric->random());
@@ -50,8 +59,8 @@ class GeometricTest extends TestCase
 
     public function testDeterministicWithSameSeed(): void
     {
-        $geometric1 = new Geometric(new Randomizer(new Mt19937(12345)), 0.4);
-        $geometric2 = new Geometric(new Randomizer(new Mt19937(12345)), 0.4);
+        $geometric1 = new Geometric(0.4, new Randomizer(new Mt19937(12345)));
+        $geometric2 = new Geometric(0.4, new Randomizer(new Mt19937(12345)));
 
         for ($i = 0; $i < 20; $i++) {
             $this->assertSame($geometric1->random(), $geometric2->random());
@@ -61,7 +70,7 @@ class GeometricTest extends TestCase
     public function testDistributionMeanApproximation(): void
     {
         $p = 0.5;
-        $geometric = new Geometric(new Randomizer(new Mt19937(42)), $p);
+        $geometric = new Geometric($p, new Randomizer(new Mt19937(42)));
         $samples = 5000;
         $sum = 0;
 
@@ -77,7 +86,7 @@ class GeometricTest extends TestCase
     public function testPmfKnownValues(): void
     {
         // Geometric(p=0.5): PMF(k) = (0.5)^k * 0.5
-        $geometric = new Geometric(new Randomizer(), 0.5);
+        $geometric = new Geometric(0.5);
 
         $this->assertEqualsWithDelta(0.5, $geometric->pmf(0), 1e-12);
         $this->assertEqualsWithDelta(0.25, $geometric->pmf(1), 1e-12);
@@ -85,7 +94,7 @@ class GeometricTest extends TestCase
         $this->assertEqualsWithDelta(0.0625, $geometric->pmf(3), 1e-12);
 
         // Geometric(p=0.2): PMF(0)=0.2, PMF(1)=0.16, PMF(2)=0.128
-        $geometric2 = new Geometric(new Randomizer(), 0.2);
+        $geometric2 = new Geometric(0.2);
         $this->assertEqualsWithDelta(0.2, $geometric2->pmf(0), 1e-12);
         $this->assertEqualsWithDelta(0.16, $geometric2->pmf(1), 1e-12);
         $this->assertEqualsWithDelta(0.128, $geometric2->pmf(2), 1e-12);
@@ -93,19 +102,19 @@ class GeometricTest extends TestCase
 
     public function testPmfBoundaryAndEdgeCases(): void
     {
-        $geometric = new Geometric(new Randomizer(), 0.4);
+        $geometric = new Geometric(0.4);
 
         $this->assertSame(0.0, $geometric->pmf(-1));
         $this->assertSame(0.0, $geometric->pmf(-10));
 
         // p = 1.0 edge case
-        $fullProb = new Geometric(new Randomizer(), 1.0);
+        $fullProb = new Geometric(1.0);
         $this->assertSame(1.0, $fullProb->pmf(0));
         $this->assertSame(0.0, $fullProb->pmf(1));
         $this->assertSame(0.0, $fullProb->pmf(5));
 
         // p <= 0.0 edge case
-        $zeroProb = new Geometric(new Randomizer(), 0.0);
+        $zeroProb = new Geometric(0.0);
         $this->assertSame(0.0, $zeroProb->pmf(0));
         $this->assertSame(0.0, $zeroProb->pmf(1));
 
@@ -119,7 +128,7 @@ class GeometricTest extends TestCase
     public function testCdfKnownValues(): void
     {
         // Geometric(p=0.5): CDF(k) = 1 - 0.5^(k+1)
-        $geometric = new Geometric(new Randomizer(), 0.5);
+        $geometric = new Geometric(0.5);
 
         $this->assertEqualsWithDelta(0.5, $geometric->cdf(0), 1e-12);
         $this->assertEqualsWithDelta(0.75, $geometric->cdf(1), 1e-12);
@@ -129,19 +138,19 @@ class GeometricTest extends TestCase
 
     public function testCdfBoundaryAndEdgeCases(): void
     {
-        $geometric = new Geometric(new Randomizer(), 0.3);
+        $geometric = new Geometric(0.3);
 
         $this->assertSame(0.0, $geometric->cdf(-1));
         $this->assertSame(0.0, $geometric->cdf(-5));
 
         // p = 1.0 edge case
-        $fullProb = new Geometric(new Randomizer(), 1.0);
+        $fullProb = new Geometric(1.0);
         $this->assertSame(0.0, $fullProb->cdf(-1));
         $this->assertSame(1.0, $fullProb->cdf(0));
         $this->assertSame(1.0, $fullProb->cdf(5));
 
         // p <= 0.0 edge case
-        $zeroProb = new Geometric(new Randomizer(), 0.0);
+        $zeroProb = new Geometric(0.0);
         $this->assertSame(0.0, $zeroProb->cdf(0));
         $this->assertSame(0.0, $zeroProb->cdf(5));
 
@@ -151,7 +160,7 @@ class GeometricTest extends TestCase
 
     public function testCdfMatchesCumulativePmfSum(): void
     {
-        $geometric = new Geometric(new Randomizer(), 0.35);
+        $geometric = new Geometric(0.35);
 
         $cumulativePmf = 0.0;
         for ($k = 0; $k <= 20; $k++) {

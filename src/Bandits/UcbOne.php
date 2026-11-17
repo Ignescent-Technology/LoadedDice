@@ -17,6 +17,6 @@ final class UcbOne implements BanditStrategy
             return $experimentalData->getArmAverage($arm) + $variancePremium;
         }, $arms);
 
-        return $experimentalData->bestArm(array_combine($arms, $scores));
+        return Bandit::bestArm(array_combine($arms, $scores));
     }
 }

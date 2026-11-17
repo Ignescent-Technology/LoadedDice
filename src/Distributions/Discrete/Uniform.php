@@ -7,9 +7,9 @@ use Random\Randomizer;
 final class Uniform implements Distribution
 {
     public function __construct(
-        protected Randomizer $randomizer,
         public int $min,
-        public int $max
+        public int $max,
+        protected Randomizer $randomizer = new Randomizer(),
     )
     {
     }
