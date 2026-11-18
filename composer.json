@@ -36,8 +36,13 @@
         }
     ],
     "require-dev": {
-        "illuminate/support": "^13.26",
-        "phpunit/phpunit": "^13.3"
+        "illuminate/support": "^13.43",
+        "phpunit/phpunit": "^13.4"
+    },
+    "config": {
+        "platform": {
+            "php": "8.4.1"
+        }
     },
     "extra": {
         "laravel": {
