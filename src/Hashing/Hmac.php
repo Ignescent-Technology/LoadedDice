@@ -5,6 +5,9 @@ namespace Ignescent\LoadedDice\Hashing;
 use Random\Engine;
 use Random\Engine\Xoshiro256StarStar;
 
+/**
+ * HMAC-based hashing engine that generates deterministic digests and random seeds.
+ */
 final readonly class Hmac implements Hash
 {
     public function __construct(

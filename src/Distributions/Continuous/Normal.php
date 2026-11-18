@@ -5,6 +5,9 @@ namespace Ignescent\LoadedDice\Distributions\Continuous;
 use Ignescent\LoadedDice\Utils;
 use Random\Randomizer;
 
+/**
+ * Continuous Normal (Gaussian) distribution parameterized by mean and standard deviation.
+ */
 final class Normal implements Distribution
 {
     private array $standardVariates = [];

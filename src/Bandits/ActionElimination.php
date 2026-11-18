@@ -2,6 +2,10 @@
 
 namespace Ignescent\LoadedDice\Bandits;
 
+/**
+ * Multi-armed bandit strategy decorator that prunes arms whose UCB1 upper confidence bound
+ * falls below the highest lower confidence bound across all arms.
+ */
 final class ActionElimination implements BanditStrategy
 {
     public function __construct(

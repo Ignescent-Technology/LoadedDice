@@ -5,6 +5,9 @@ namespace Ignescent\LoadedDice\Distributions\Discrete;
 use Ignescent\LoadedDice\Utils;
 use Random\Randomizer;
 
+/**
+ * Discrete Poisson distribution representing the number of events occurring in a fixed interval.
+ */
 final class Poisson implements Distribution
 {
     private float $step;

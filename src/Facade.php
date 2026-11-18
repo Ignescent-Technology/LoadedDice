@@ -18,9 +18,11 @@ use Random\Randomizer;
 use Stringable;
 
 /**
+ * Primary entry point and convenience facade for deterministic pseudo-random generators,
+ * statistical distribution samplers, multi-armed bandits, and rendezvous hashing.
  *
- *  Given the same constructor key and the same arguments, functions in this class will always return
- *  the same results.
+ * Given the same constructor key and the same arguments, functions in this class will always return
+ * the same results.
  */
 final readonly class Facade
 {

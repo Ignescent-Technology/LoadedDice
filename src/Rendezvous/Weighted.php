@@ -7,6 +7,10 @@ use Ignescent\LoadedDice\Utils;
 use Ignescent\LoadedDice\WeightResolving\WeightResolver;
 use Stringable;
 
+/**
+ * Weighted rendezvous (Highest Random Weight) consistent hashing distributing keys
+ * proportional to node capacity weights.
+ */
 final class Weighted extends Base
 {
     public function __construct(

@@ -2,6 +2,9 @@
 
 namespace Ignescent\LoadedDice\Bandits;
 
+/**
+ * Pure exploitation bandit strategy that selects the arm with the highest observed empirical mean.
+ */
 final class Greedy implements BanditStrategy
 {
     public function pull(ExperimentalData $experimentalData): string

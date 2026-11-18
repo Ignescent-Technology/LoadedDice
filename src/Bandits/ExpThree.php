@@ -4,6 +4,10 @@ namespace Ignescent\LoadedDice\Bandits;
 
 use Random\Randomizer;
 
+/**
+ * Exp3 (Exponential-weight algorithm for Exploration and Exploitation)
+ * non-stochastic multi-armed bandit strategy with adaptive closed-form exploration.
+ */
 final class ExpThree implements BanditStrategy
 {
     public function __construct(

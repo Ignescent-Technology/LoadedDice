@@ -4,6 +4,9 @@ namespace Ignescent\LoadedDice\Distributions\Continuous;
 
 use Random\Randomizer;
 
+/**
+ * Continuous Exponential distribution parameterized by rate parameter lambda.
+ */
 final class Exponential implements Distribution
 {
     public function __construct(

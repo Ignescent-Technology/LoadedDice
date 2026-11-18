@@ -4,6 +4,9 @@ namespace Ignescent\LoadedDice\Distributions\Discrete;
 
 use Random\Randomizer;
 
+/**
+ * Discrete Geometric distribution representing the number of failures before the first success (0-indexed).
+ */
 final class Geometric implements Distribution
 {
     public function __construct(

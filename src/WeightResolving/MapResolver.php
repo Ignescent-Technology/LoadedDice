@@ -4,6 +4,9 @@ namespace Ignescent\LoadedDice\WeightResolving;
 
 use Stringable;
 
+/**
+ * Array map-backed weight resolver for weighted rendezvous hashing.
+ */
 final class MapResolver implements WeightResolver
 {
     /**

@@ -6,6 +6,9 @@ use Exception;
 use MathieuViossat\Util\FibonacciHeap;
 use Stringable;
 
+/**
+ * Base abstract implementation of rendezvous hashing using a Fibonacci heap priority queue.
+ */
 abstract class Base implements RendezvousContract
 {
     /**

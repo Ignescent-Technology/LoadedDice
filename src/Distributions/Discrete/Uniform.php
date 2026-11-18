@@ -4,6 +4,9 @@ namespace Ignescent\LoadedDice\Distributions\Discrete;
 
 use Random\Randomizer;
 
+/**
+ * Discrete Uniform distribution over the integer interval [min, max].
+ */
 final class Uniform implements Distribution
 {
     public function __construct(

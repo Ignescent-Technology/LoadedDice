@@ -2,6 +2,10 @@
 
 namespace Ignescent\LoadedDice\Bandits;
 
+/**
+ * Multi-armed bandit orchestrator that executes a selection strategy
+ * and tracks arm reward histories in experimental data.
+ */
 final class Bandit
 {
     private ExperimentalData $experimentalData;

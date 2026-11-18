@@ -4,6 +4,10 @@ namespace Ignescent\LoadedDice\Bandits;
 
 use Random\Randomizer;
 
+/**
+ * Multi-armed bandit strategy decorator that explores uniformly with probability epsilon
+ * and delegates to the decorated strategy with probability 1 - epsilon.
+ */
 final class EpsilonFallthrough implements BanditStrategy
 {
     public function __construct(

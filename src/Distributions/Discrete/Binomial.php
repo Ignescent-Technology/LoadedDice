@@ -5,6 +5,9 @@ namespace Ignescent\LoadedDice\Distributions\Discrete;
 use Ignescent\LoadedDice\Utils;
 use Random\Randomizer;
 
+/**
+ * Discrete Binomial distribution representing the number of successes in n independent Bernoulli trials.
+ */
 final class Binomial implements Distribution
 {
     public function __construct(

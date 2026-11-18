@@ -5,6 +5,9 @@ namespace Ignescent\LoadedDice\Rendezvous;
 use Ignescent\LoadedDice\Hashing\Hash;
 use Stringable;
 
+/**
+ * Uniform rendezvous (Highest Random Weight) consistent hashing over identical nodes.
+ */
 final class Simple extends Base
 {
     public function __construct(

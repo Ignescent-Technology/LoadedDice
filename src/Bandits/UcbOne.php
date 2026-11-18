@@ -2,6 +2,10 @@
 
 namespace Ignescent\LoadedDice\Bandits;
 
+/**
+ * UCB1 (Upper Confidence Bound 1) multi-armed bandit strategy balancing empirical means
+ * with an uncertainty premium for under-explored actions.
+ */
 final class UcbOne implements BanditStrategy
 {
     public function pull(ExperimentalData $experimentalData): string

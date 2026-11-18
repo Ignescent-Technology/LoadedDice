@@ -2,6 +2,10 @@
 
 namespace Ignescent\LoadedDice\Bandits;
 
+/**
+ * Stores and aggregates historical pull counts, rewards, and empirical averages
+ * for multi-armed bandit actions.
+ */
 final class ExperimentalData
 {
     private array $arms;

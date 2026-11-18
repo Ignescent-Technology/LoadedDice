@@ -5,6 +5,9 @@ namespace Ignescent\LoadedDice\Distributions\Continuous;
 use Ignescent\LoadedDice\Utils;
 use Random\Randomizer;
 
+/**
+ * Continuous Beta distribution parameterized by shape parameters alpha and beta.
+ */
 final class Beta implements Distribution
 {
     private Gamma $alphaGamma;

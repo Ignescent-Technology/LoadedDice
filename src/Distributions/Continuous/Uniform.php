@@ -4,6 +4,9 @@ namespace Ignescent\LoadedDice\Distributions\Continuous;
 
 use Random\Randomizer;
 
+/**
+ * Continuous Uniform distribution over the real interval [min, max].
+ */
 final class Uniform implements Distribution
 {
     public function __construct(

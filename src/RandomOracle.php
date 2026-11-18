@@ -6,6 +6,9 @@ use Ignescent\LoadedDice\Hashing\Hash;
 use MathieuViossat\Util\FibonacciHeap;
 use Stringable;
 
+/**
+ * Deterministic pseudo-random oracle mapping arbitrary input strings to booleans, floats, and integers.
+ */
 final readonly class RandomOracle
 {
     public function __construct(

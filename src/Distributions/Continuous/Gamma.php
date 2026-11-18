@@ -5,6 +5,9 @@ namespace Ignescent\LoadedDice\Distributions\Continuous;
 use Ignescent\LoadedDice\Utils;
 use Random\Randomizer;
 
+/**
+ * Continuous Gamma distribution parameterized by shape (k) and scale (theta).
+ */
 final class Gamma implements Distribution
 {
     private Uniform $uniform;

@@ -3,6 +3,8 @@
 namespace Ignescent\LoadedDice;
 
 /**
+ * High-precision mathematical and hashing utility functions.
+ *
  * @private Not part of the public API, liable to change without notice.
  */
 final class Utils

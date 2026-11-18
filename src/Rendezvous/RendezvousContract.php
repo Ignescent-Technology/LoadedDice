@@ -5,6 +5,9 @@ namespace Ignescent\LoadedDice\Rendezvous;
 use Exception;
 use Stringable;
 
+/**
+ * Contract for rendezvous (Highest Random Weight) consistent hashing implementations.
+ */
 interface RendezvousContract
 {
     /**
