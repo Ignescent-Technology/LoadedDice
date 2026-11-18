@@ -1,6 +1,22 @@
 {
     "name": "ignescent/loaded-dice",
     "description": "Utilities for deterministic randomness.",
+    "keywords": [
+        "random",
+        "randomizer",
+        "deterministic",
+        "bandit",
+        "multi-armed-bandit",
+        "distributions",
+        "rendezvous-hashing",
+        "hrw",
+        "laravel"
+    ],
+    "homepage": "https://github.com/ignescent/loaded-dice",
+    "support": {
+        "issues": "https://github.com/ignescent/loaded-dice/issues",
+        "source": "https://github.com/ignescent/loaded-dice"
+    },
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -26,7 +42,7 @@
     "extra": {
         "laravel": {
             "aliases": {
-                "LoadedDice": "Ignescent\\LoadedDice\\Laravel\\Facade"
+                "LoadedDice": "Ignescent\\LoadedDice\\Laravel\\LoadedDice"
             },
             "providers": [
                 "Ignescent\\LoadedDice\\Laravel\\LoadedDiceProvider"
