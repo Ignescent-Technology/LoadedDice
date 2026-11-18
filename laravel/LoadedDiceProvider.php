@@ -6,9 +6,16 @@ namespace Ignescent\LoadedDice\Laravel;
 
 use Ignescent\LoadedDice\Hashing\Hash;
 use Ignescent\LoadedDice\Hashing\Hmac;
+use Ignescent\LoadedDice\Rendezvous\Simple;
+use Ignescent\LoadedDice\Rendezvous\Weighted;
+use Ignescent\LoadedDice\WeightResolving\MapResolver;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
+use Stringable;
 
+/**
+ * Laravel service provider registering LoadedDice bindings, configuration, and collection macros.
+ */
 class LoadedDiceProvider extends ServiceProvider
 {
     public $bindings = [
@@ -44,6 +51,26 @@ class LoadedDiceProvider extends ServiceProvider
             if (is_callable($number)) $number = $number($this);
 
             return $this->newInstance(LoadedDice::randomSubset($number, $this->all(), $preserveKeys));
+        });
+
+        Collection::macro('rendezvous', function (
+            string|Stringable $objectIdentifier,
+            array $weightedSites = null,
+            int|callable|null $number = null,
+            $preserveKeys = false,
+        ): mixed {
+            $hash = new Hmac((string) $objectIdentifier, "sha256");
+
+            if (is_null($weightedSites)) {
+                $rendezvous = new Simple($hash);
+            } else {
+                $rendezvous = new Weighted($hash, new MapResolver($weightedSites));
+            }
+
+            if (is_null($number)) return $rendezvous->randomElement($this->values()->all());
+            if (is_callable($number)) $number = $number($this);
+
+            return $this->newInstance($rendezvous->randomSubset($number, $this->all(), $preserveKeys));
         });
     }
 }
