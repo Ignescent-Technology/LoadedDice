@@ -13,6 +13,7 @@ use Ignescent\LoadedDice\Distributions\Continuous\Normal as ContinuousNormal;
 use Ignescent\LoadedDice\Distributions\Continuous\Uniform as ContinuousUniform;
 use Ignescent\LoadedDice\Distributions\Discrete\Binomial as DiscreteBinomial;
 use Ignescent\LoadedDice\Distributions\Discrete\Geometric as DiscreteGeometric;
+use Ignescent\LoadedDice\Distributions\Discrete\Hypergeometric as DiscreteHypergeometric;
 use Ignescent\LoadedDice\Distributions\Discrete\Poisson as DiscretePoisson;
 use Ignescent\LoadedDice\Distributions\Discrete\Uniform as DiscreteUniform;
 use Ignescent\LoadedDice\Facade;
@@ -333,6 +334,23 @@ class FacadeTest extends TestCase
         // Without seed
         $genDefault = $this->facade->discreteUniformGenerator(1, 6);
         $this->assertInstanceOf(DiscreteUniform::class, $genDefault);
+    }
+
+    public function testHypergeometricGeneratorReturnsHypergeometricDistributionInstance(): void
+    {
+        $gen = $this->facade->hypergeometricGenerator(52, 4, 5, 'hypergeom-seed');
+
+        $this->assertInstanceOf(DiscreteHypergeometric::class, $gen);
+        $sample1 = $gen->random();
+        $sample2 = $this->facade->hypergeometricGenerator(52, 4, 5, 'hypergeom-seed')->random();
+
+        $this->assertSame($sample1, $sample2);
+        $this->assertGreaterThanOrEqual(0, $sample1);
+        $this->assertLessThanOrEqual(4, $sample1);
+
+        // Without seed
+        $genDefault = $this->facade->hypergeometricGenerator(52, 4, 5);
+        $this->assertInstanceOf(DiscreteHypergeometric::class, $genDefault);
     }
 
     public function testGeneratorsWithStringable(): void

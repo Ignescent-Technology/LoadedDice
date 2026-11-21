@@ -32,7 +32,7 @@ Given the same secret key and input arguments, LoadedDice guarantees reproducibl
 ## Features
 
 - **Multi-Armed Bandits:** High-performance reinforcement learning algorithms (`ThompsonSamplingBeta`, `UcbOne`, `ExpThree`, `EpsilonGreedy`, `Greedy`) with decorator modifiers (`ActionElimination`, `EpsilonFallthrough`).
-- **Statistical Distributions:** Full support for continuous (`Beta`, `Exponential`, `Gamma`, `Normal`, `Uniform`) and discrete (`Binomial`, `Geometric`, `Poisson`, `Uniform`) distributions with `random()`, `cdf()`, and `pdf()`/`pmf()` evaluations.
+- **Statistical Distributions:** Full support for continuous (`Beta`, `Exponential`, `Gamma`, `Normal`, `Uniform`) and discrete (`Binomial`, `Geometric`, `Hypergeometric`, `Poisson`, `Uniform`) distributions with `random()`, `cdf()`, and `pdf()`/`pmf()` evaluations.
 - **Consistent Rendezvous Hashing:** Highest Random Weight (HRW) hashing for distributed node selection with uniform and weighted capacity routing.
 - **Deterministic Random Oracle:** Map arbitrary stringable keys and objects to reproducible floats, booleans, and integers.
 - **Laravel Ready:** Includes service provider auto-discovery, configuration publishing, facade, and `Collection::fauxRandom()` / `Collection::rendezvous()` macros.
@@ -184,6 +184,7 @@ $pdf    = $uniform->pdf(15.0); // 0.1
 ```php
 use Ignescent\LoadedDice\Distributions\Discrete\Binomial;
 use Ignescent\LoadedDice\Distributions\Discrete\Geometric;
+use Ignescent\LoadedDice\Distributions\Discrete\Hypergeometric;
 use Ignescent\LoadedDice\Distributions\Discrete\Poisson;
 use Ignescent\LoadedDice\Distributions\Discrete\Uniform;
 
@@ -192,6 +193,13 @@ $binomial = new Binomial(trials: 10, probability: 0.5);
 $successes = $binomial->random(); // int [0, 10]
 $cdf       = $binomial->cdf(5);
 $pmf       = $binomial->pmf(5);
+
+// Hypergeometric distribution: Hypergeometric(population, successes, draws)
+// Models sampling without replacement (e.g. drawing aces from a standard card deck)
+$hypergeometric = new Hypergeometric(population: 52, successes: 4, draws: 5);
+$observedAces   = $hypergeometric->random(); // int [0, 4]
+$cdf            = $hypergeometric->cdf(1);
+$pmf            = $hypergeometric->pmf(1);
 
 // Geometric distribution: Geometric(probability)
 // Represents the number of failures before the first success (0-indexed)

@@ -154,6 +154,11 @@ final readonly class Facade
         return new Distributions\Discrete\Uniform($min, $max, $this->seedRandomizer($value));
     }
 
+    public function hypergeometricGenerator(int $population, int $successes, int $draws, string|Stringable|null $value = null): Distributions\Discrete\Hypergeometric
+    {
+        return new Distributions\Discrete\Hypergeometric($population, $successes, $draws, $this->seedRandomizer($value));
+    }
+
     private function seedRandomizer(string|Stringable|null $value = null): Randomizer
     {
         if ($value === null) {

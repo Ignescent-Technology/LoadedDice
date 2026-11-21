@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Strategy decorators: `ActionElimination` (confidence bound pruning) and `EpsilonFallthrough` (exploration mixing).
 - **Statistical Distributions:**
   - Continuous distributions: `Beta`, `Exponential`, `Gamma`, `Normal`, and `Uniform` with `random()`, `cdf()`, and `pdf()`.
-  - Discrete distributions: `Binomial`, `Geometric`, `Poisson`, and `Uniform` with `random()`, `cdf()`, and `pmf()`.
+  - Discrete distributions: `Binomial`, `Geometric`, `Hypergeometric`, `Poisson`, and `Uniform` with `random()`, `cdf()`, and `pmf()`.
   - Optional `Randomizer` parameter injection across all distribution constructors with default fallback to `new Randomizer()`.
 - **Rendezvous Hashing:**
   - Highest Random Weight (HRW) consistent hashing via `Simple` and `Weighted` algorithms.
