@@ -6,19 +6,10 @@ namespace Ignescent\LoadedDice\Tests;
 
 use Ignescent\LoadedDice\Bandits\Bandit;
 use Ignescent\LoadedDice\Bandits\ExperimentalData;
-use Ignescent\LoadedDice\Distributions\Continuous\Beta as ContinuousBeta;
-use Ignescent\LoadedDice\Distributions\Continuous\Exponential as ContinuousExponential;
-use Ignescent\LoadedDice\Distributions\Continuous\Gamma as ContinuousGamma;
-use Ignescent\LoadedDice\Distributions\Continuous\Normal as ContinuousNormal;
-use Ignescent\LoadedDice\Distributions\Continuous\Uniform as ContinuousUniform;
-use Ignescent\LoadedDice\Distributions\Discrete\Binomial as DiscreteBinomial;
-use Ignescent\LoadedDice\Distributions\Discrete\Geometric as DiscreteGeometric;
-use Ignescent\LoadedDice\Distributions\Discrete\Hypergeometric as DiscreteHypergeometric;
-use Ignescent\LoadedDice\Distributions\Discrete\Poisson as DiscretePoisson;
-use Ignescent\LoadedDice\Distributions\Discrete\Uniform as DiscreteUniform;
 use Ignescent\LoadedDice\Facade;
 use Ignescent\LoadedDice\Hashing\Hmac;
 use PHPUnit\Framework\TestCase;
+use Random\Randomizer;
 use Stringable;
 
 class FacadeTest extends TestCase
@@ -188,172 +179,28 @@ class FacadeTest extends TestCase
         $this->assertContains($banditDefault->pull(), ['arm_a', 'arm_b']);
     }
 
-    public function testBetaGeneratorReturnsBetaDistributionInstance(): void
+    public function testSeedRandomizer(): void
     {
-        $gen = $this->facade->betaGenerator(2.0, 5.0, 'beta-seed');
+        $r1 = $this->facade->seedRandomizer('seed-1');
+        $r2 = $this->facade->seedRandomizer('seed-1');
+        $this->assertInstanceOf(Randomizer::class, $r1);
+        $this->assertSame($r1->getInt(0, 1000), $r2->getInt(0, 1000));
 
-        $this->assertInstanceOf(ContinuousBeta::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->betaGenerator(2.0, 5.0, 'beta-seed')->random();
+        $rDefault = $this->facade->seedRandomizer();
+        $this->assertInstanceOf(Randomizer::class, $rDefault);
 
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThanOrEqual(0.0, $sample1);
-        $this->assertLessThanOrEqual(1.0, $sample1);
-
-        // Without seed
-        $genDefault = $this->facade->betaGenerator(2.0, 5.0);
-        $this->assertInstanceOf(ContinuousBeta::class, $genDefault);
+        $seedObject = new class implements Stringable {
+            public function __toString(): string
+            {
+                return 'seed-1';
+            }
+        };
+        $rStr = $this->facade->seedRandomizer('seed-1');
+        $rObj = $this->facade->seedRandomizer($seedObject);
+        $this->assertSame($rStr->getInt(0, 1000), $rObj->getInt(0, 1000));
     }
 
-    public function testExponentialGeneratorReturnsExponentialDistributionInstance(): void
-    {
-        $gen = $this->facade->exponentialGenerator(1.5, 'exp-seed');
-
-        $this->assertInstanceOf(ContinuousExponential::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->exponentialGenerator(1.5, 'exp-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThan(0.0, $sample1);
-
-        // Without seed
-        $genDefault = $this->facade->exponentialGenerator(1.5);
-        $this->assertInstanceOf(ContinuousExponential::class, $genDefault);
-    }
-
-    public function testGammaGeneratorReturnsGammaDistributionInstance(): void
-    {
-        $gen = $this->facade->gammaGenerator(2.0, 2.0, 'gamma-seed');
-
-        $this->assertInstanceOf(ContinuousGamma::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->gammaGenerator(2.0, 2.0, 'gamma-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThan(0.0, $sample1);
-
-        // Without seed
-        $genDefault = $this->facade->gammaGenerator(2.0, 2.0);
-        $this->assertInstanceOf(ContinuousGamma::class, $genDefault);
-    }
-
-    public function testNormalGeneratorReturnsNormalDistributionInstance(): void
-    {
-        $gen = $this->facade->normalGenerator(10.0, 2.0, 'normal-seed');
-
-        $this->assertInstanceOf(ContinuousNormal::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->normalGenerator(10.0, 2.0, 'normal-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertIsFloat($sample1);
-
-        // Without seed & with default args
-        $genDefault = $this->facade->normalGenerator();
-        $this->assertInstanceOf(ContinuousNormal::class, $genDefault);
-    }
-
-    public function testContinuousUniformGeneratorReturnsContinuousUniformDistributionInstance(): void
-    {
-        $gen = $this->facade->continuousUniformGenerator(5.0, 10.0, 'cuniform-seed');
-
-        $this->assertInstanceOf(ContinuousUniform::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->continuousUniformGenerator(5.0, 10.0, 'cuniform-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThanOrEqual(5.0, $sample1);
-        $this->assertLessThanOrEqual(10.0, $sample1);
-
-        // Without seed & with default args
-        $genDefault = $this->facade->continuousUniformGenerator();
-        $this->assertInstanceOf(ContinuousUniform::class, $genDefault);
-    }
-
-    public function testBinomialGeneratorReturnsBinomialDistributionInstance(): void
-    {
-        $gen = $this->facade->binomialGenerator(10, 0.5, 'binom-seed');
-
-        $this->assertInstanceOf(DiscreteBinomial::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->binomialGenerator(10, 0.5, 'binom-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThanOrEqual(0, $sample1);
-        $this->assertLessThanOrEqual(10, $sample1);
-
-        // Without seed
-        $genDefault = $this->facade->binomialGenerator(10, 0.5);
-        $this->assertInstanceOf(DiscreteBinomial::class, $genDefault);
-    }
-
-    public function testGeometricGeneratorReturnsGeometricDistributionInstance(): void
-    {
-        $gen = $this->facade->geometricGenerator(0.3, 'geom-seed');
-
-        $this->assertInstanceOf(DiscreteGeometric::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->geometricGenerator(0.3, 'geom-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThanOrEqual(0, $sample1);
-
-        // Without seed
-        $genDefault = $this->facade->geometricGenerator(0.3);
-        $this->assertInstanceOf(DiscreteGeometric::class, $genDefault);
-    }
-
-    public function testPoissonGeneratorReturnsPoissonDistributionInstance(): void
-    {
-        $gen = $this->facade->poissonGenerator(4.0, 'poisson-seed');
-
-        $this->assertInstanceOf(DiscretePoisson::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->poissonGenerator(4.0, 'poisson-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThanOrEqual(0, $sample1);
-
-        // Without seed
-        $genDefault = $this->facade->poissonGenerator(4.0);
-        $this->assertInstanceOf(DiscretePoisson::class, $genDefault);
-    }
-
-    public function testDiscreteUniformGeneratorReturnsDiscreteUniformDistributionInstance(): void
-    {
-        $gen = $this->facade->discreteUniformGenerator(1, 6, 'duniform-seed');
-
-        $this->assertInstanceOf(DiscreteUniform::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->discreteUniformGenerator(1, 6, 'duniform-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThanOrEqual(1, $sample1);
-        $this->assertLessThanOrEqual(6, $sample1);
-
-        // Without seed
-        $genDefault = $this->facade->discreteUniformGenerator(1, 6);
-        $this->assertInstanceOf(DiscreteUniform::class, $genDefault);
-    }
-
-    public function testHypergeometricGeneratorReturnsHypergeometricDistributionInstance(): void
-    {
-        $gen = $this->facade->hypergeometricGenerator(52, 4, 5, 'hypergeom-seed');
-
-        $this->assertInstanceOf(DiscreteHypergeometric::class, $gen);
-        $sample1 = $gen->random();
-        $sample2 = $this->facade->hypergeometricGenerator(52, 4, 5, 'hypergeom-seed')->random();
-
-        $this->assertSame($sample1, $sample2);
-        $this->assertGreaterThanOrEqual(0, $sample1);
-        $this->assertLessThanOrEqual(4, $sample1);
-
-        // Without seed
-        $genDefault = $this->facade->hypergeometricGenerator(52, 4, 5);
-        $this->assertInstanceOf(DiscreteHypergeometric::class, $genDefault);
-    }
-
-    public function testGeneratorsWithStringable(): void
+    public function testThompsonWithStringable(): void
     {
         $seedObject = new class implements Stringable {
             public function __toString(): string
@@ -361,11 +208,6 @@ class FacadeTest extends TestCase
                 return 'stringable-seed';
             }
         };
-
-        $genStr = $this->facade->betaGenerator(2.0, 5.0, 'stringable-seed');
-        $genObj = $this->facade->betaGenerator(2.0, 5.0, $seedObject);
-
-        $this->assertSame($genStr->random(), $genObj->random());
 
         $data = new ExperimentalData(['arm1' => [], 'arm2' => []]);
         $bandit1 = $this->facade->thompson($data, 'stringable-seed');

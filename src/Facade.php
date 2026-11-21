@@ -109,57 +109,7 @@ final readonly class Facade
         return $this->simpleRendezvous->randomSubset($number, $collection, $preserveKeys);
     }
 
-    public function betaGenerator(float $alpha, float $beta, string|Stringable|null $value = null): Distributions\Continuous\Beta
-    {
-        return new Distributions\Continuous\Beta($alpha, $beta, $this->seedRandomizer($value));
-    }
-
-    public function exponentialGenerator(float $lambda, string|Stringable|null $value = null): Distributions\Continuous\Exponential
-    {
-        return new Distributions\Continuous\Exponential($lambda, $this->seedRandomizer($value));
-    }
-
-    public function gammaGenerator(float $shape, float $scale, string|Stringable|null $value = null): Distributions\Continuous\Gamma
-    {
-        return new Distributions\Continuous\Gamma($shape, $scale, $this->seedRandomizer($value));
-    }
-
-    public function normalGenerator(float $mean = 0.0, float $stdDev = 1.0, string|Stringable|null $value = null): Distributions\Continuous\Normal
-    {
-        return new Distributions\Continuous\Normal($mean, $stdDev, $this->seedRandomizer($value));
-    }
-
-    public function continuousUniformGenerator(float $min = 0.0, float $max = 1.0, string|Stringable|null $value = null): Distributions\Continuous\Uniform
-    {
-        return new Distributions\Continuous\Uniform($min, $max, $this->seedRandomizer($value));
-    }
-
-    public function binomialGenerator(int $trials, float $probability, string|Stringable|null $value = null): Distributions\Discrete\Binomial
-    {
-        return new Distributions\Discrete\Binomial($trials, $probability, $this->seedRandomizer($value));
-    }
-
-    public function geometricGenerator(float $probability, string|Stringable|null $value = null): Distributions\Discrete\Geometric
-    {
-        return new Distributions\Discrete\Geometric($probability, $this->seedRandomizer($value));
-    }
-
-    public function poissonGenerator(float $lambda, string|Stringable|null $value = null): Distributions\Discrete\Poisson
-    {
-        return new Distributions\Discrete\Poisson($lambda, $this->seedRandomizer($value));
-    }
-
-    public function discreteUniformGenerator(int $min, int $max, string|Stringable|null $value = null): Distributions\Discrete\Uniform
-    {
-        return new Distributions\Discrete\Uniform($min, $max, $this->seedRandomizer($value));
-    }
-
-    public function hypergeometricGenerator(int $population, int $successes, int $draws, string|Stringable|null $value = null): Distributions\Discrete\Hypergeometric
-    {
-        return new Distributions\Discrete\Hypergeometric($population, $successes, $draws, $this->seedRandomizer($value));
-    }
-
-    private function seedRandomizer(string|Stringable|null $value = null): Randomizer
+    public function seedRandomizer(string|Stringable|null $value = null): Randomizer
     {
         if ($value === null) {
             return new Randomizer();
