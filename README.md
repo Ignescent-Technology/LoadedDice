@@ -41,7 +41,7 @@ Given the same secret key and input arguments, LoadedDice guarantees reproducibl
 
 ## Requirements
 
-- PHP 8.3 or higher
+- PHP 8.4 or higher
 
 ---
 
@@ -236,7 +236,7 @@ use Ignescent\LoadedDice\Facade;
 use Ignescent\LoadedDice\Hashing\Hmac;
 use Ignescent\LoadedDice\Rendezvous\Simple;
 
-$hash = new Hmac('shared-secret-key');
+$hash = new Hmac('user_session:10492');
 $rendezvous = new Simple($hash);
 
 $servers = ['server-1', 'server-2', 'server-3', 'server-4'];
