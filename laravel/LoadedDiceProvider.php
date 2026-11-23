@@ -55,9 +55,9 @@ class LoadedDiceProvider extends ServiceProvider
 
         Collection::macro('rendezvous', function (
             string|Stringable $objectIdentifier,
-            array $weightedSites = null,
+            ?array            $weightedSites = null,
             int|callable|null $number = null,
-            $preserveKeys = false,
+                              $preserveKeys = false,
         ): mixed {
             $hash = new Hmac((string) $objectIdentifier, "sha256");
 
