@@ -232,7 +232,6 @@ Rendezvous hashing (Highest Random Weight hashing) provides consistent, determin
 Uniformly routes keys across identical sites:
 
 ```php
-use Ignescent\LoadedDice\Facade;
 use Ignescent\LoadedDice\Hashing\Hmac;
 use Ignescent\LoadedDice\Rendezvous\Simple;
 
@@ -253,21 +252,24 @@ $replicaServers = $rendezvous->randomSubset(2, $servers);
 Routes keys across heterogeneous nodes proportional to their capacity weights:
 
 ```php
-use Ignescent\LoadedDice\Facade;
+use Ignescent\LoadedDice\Hashing\Hmac;
+use Ignescent\LoadedDice\Rendezvous\Weighted;
+use Ignescent\LoadedDice\WeightResolving\MapResolver;
 
+$hash = new Hmac('user_session:10492');
 $nodes = [
     'cache-node-1' => 10.0, // High capacity
     'cache-node-2' => 5.0,  // Medium capacity
     'cache-node-3' => 1.0,  // Low capacity
 ];
 
+$rendezvous = new Weighted($hash, new MapResolver($nodes));
+
 // Determine the primary node for a cache key
-$assignedNodes = Facade::weightedRendezvous(
-    objectIdentifier: 'user_session:10492',
-    weightedSites: $nodes,
-    siteCount: 1
-);
-// Returns: ['cache-node-1']
+$targetNode = $rendezvous->randomElement(array_keys($nodes));
+
+// Select top 2 nodes for replication
+$assignedNodes = $rendezvous->randomSubset(2, array_keys($nodes));
 ```
 
 ---
@@ -277,19 +279,19 @@ $assignedNodes = Facade::weightedRendezvous(
 The `RandomOracle` evaluates pseudo-random values deterministically from arbitrary string identifiers:
 
 ```php
-use Ignescent\LoadedDice\Facade;
 use Ignescent\LoadedDice\Hashing\Hmac;
+use Ignescent\LoadedDice\RandomOracle;
 
-$facade = new Facade(new Hmac('app-secret'));
+$oracle = new RandomOracle(new Hmac('app-secret'));
 
 // Deterministic boolean coin-toss
-$isEnabled = $facade->boolean('user-id-4815162342');
+$isEnabled = $oracle->boolean('user-id-4815162342');
 
 // Deterministic float in [0, 1)
-$score = $facade->float('document-id-9912');
+$score = $oracle->float('document-id-9912');
 
 // Deterministic integer in [0, max)
-$bucket = $facade->integer('visitor-session-id', 100);
+$bucket = $oracle->integer('visitor-session-id', 100);
 ```
 
 ---
