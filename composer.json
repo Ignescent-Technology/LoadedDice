@@ -56,6 +56,6 @@
     },
     "require": {
         "mathieuviossat/fibonacci-heap": "^1.0",
-        "php": ">=8.3"
+        "php": ">=8.4"
     }
 }

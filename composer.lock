@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bd953d2f7acc0b4d39c114c10c39dfc4",
+    "content-hash": "b5d5bc59989695a72a5018df5759029a",
     "packages": [
         {
             "name": "mathieuviossat/fibonacci-heap",
@@ -3468,7 +3468,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=8.3"
+        "php": ">=8.4"
     },
     "platform-dev": {},
     "platform-overrides": {
